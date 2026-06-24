@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Premium icon set** — switched to inlined Bootstrap Icons (render in shared images).
+- **Create Card** — a one-click button that generates a single shareable image
+  (profile + key stats + mini heatmap + unlocked badges) and shows a **preview
+  modal** with Download and Share, instead of sharing directly.
+- **Premium icon set** — switched to inlined Bootstrap Icons (render in shared
+  images); replaced remaining emoji UI icons with consistent SVG icons.
 - **Holopin-style shareable badges** — each achievement has its own page
   (`/badge/username/id`) with a dynamic sticker OG image and per-badge share/copy.
 - **Rarity system** — badges are common / rare / epic / legendary with colored

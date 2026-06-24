@@ -12,6 +12,7 @@ import WeekdayCard from "@/components/WeekdayCard";
 import TrendChart from "@/components/TrendChart";
 import DonutChart from "@/components/DonutChart";
 import Confetti from "@/components/Confetti";
+import CreateCardModal from "@/components/CreateCardModal";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import {
   GraphIcon,
@@ -24,6 +25,9 @@ import {
   BarsIcon,
   GeoIcon,
   BuildingIcon,
+  LinkIcon,
+  ShareIcon,
+  CardImageIcon,
 } from "@/components/icons";
 import { LEVEL_COLORS, colorForLanguage } from "@/lib/colors";
 
@@ -38,6 +42,7 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
   const handle = user.login;
   const ageYears = c.accountAgeDays / 365.25;
 
+  const [cardOpen, setCardOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   function showToast(msg: string) {
     setToast(msg);
@@ -92,14 +97,21 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
           </div>
         </div>
         <div className="profile-actions">
-          <button className="action-btn" onClick={copyLink}>
-            📋 Copy link
+          <button className="action-btn create" onClick={() => setCardOpen(true)}>
+            <CardImageIcon size={15} /> Create card
           </button>
-          <button className="action-btn primary" onClick={shareProfile}>
-            🔗 Share
+          <button className="action-btn" onClick={copyLink}>
+            <LinkIcon size={15} /> Copy link
+          </button>
+          <button className="action-btn" onClick={shareProfile}>
+            <ShareIcon size={14} /> Share
           </button>
         </div>
       </section>
+
+      {cardOpen && (
+        <CreateCardModal stats={stats} onClose={() => setCardOpen(false)} />
+      )}
 
       <div className="grid">
         <DevCard stats={stats} />

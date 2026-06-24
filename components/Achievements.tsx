@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { GithubStats } from "@/lib/types";
 import { getAchievements, RARITY_COLORS } from "@/lib/achievements";
-import { getIcon, ShareIcon, CheckIcon } from "./icons";
+import { getIcon, ShareIcon, CheckIcon, TrophyIcon } from "./icons";
 import ShareCard from "./ShareCard";
 
 export default function Achievements({ stats }: { stats: GithubStats }) {
@@ -34,7 +34,7 @@ export default function Achievements({ stats }: { stats: GithubStats }) {
   return (
     <ShareCard
       title={`Achievements · ${unlocked.length}/${all.length} unlocked`}
-      icon={<span>🏅</span>}
+      icon={<TrophyIcon />}
       filename={`${stats.user.login}-achievements`}
       className="span-all"
     >
