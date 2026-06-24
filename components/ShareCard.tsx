@@ -57,7 +57,7 @@ export default function ShareCard({
         await navAny.share({
           files: [file],
           title: `${title} — GitHubStats`,
-          text: "Made with githubstats.vercel.app",
+          text: "Made with githubstatss.vercel.app",
         });
         setState("idle");
         return;
@@ -103,7 +103,7 @@ export default function ShareCard({
       </div>
       {children}
       <span className="card-mark" data-exclude="false">
-        githubstats.vercel.app
+        githubstatss.vercel.app
       </span>
     </div>
   );

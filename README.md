@@ -2,7 +2,7 @@
 
 > Showcase your GitHub story — contributions, account age, active days, top languages and more. Share any card as an image.
 
-🔗 **Live:** [githubstats.vercel.app](https://githubstats.vercel.app)
+🔗 **Live:** [githubstatss.vercel.app](https://githubstatss.vercel.app)
 
 ![open source](https://img.shields.io/badge/open%20source-MIT-39d353) ![next.js](https://img.shields.io/badge/Next.js-15-000000)
 

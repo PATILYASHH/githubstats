@@ -59,7 +59,7 @@ export default function Home() {
     <>
       <header className="hero">
         <div className="hero-mark">
-          <GithubIcon /> open source · githubstats.vercel.app
+          <GithubIcon /> open source · githubstatss.vercel.app
         </div>
         <h1>
           Showcase your <span className="grad">GitHub</span> story

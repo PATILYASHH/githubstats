@@ -268,6 +268,39 @@ a:hover {
 }
 
 /* ---------- Contribution graph ---------- */
+.contrib-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.contrib-count {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.contrib-count strong {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+}
+.year-select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+}
+.year-select:hover {
+  border-color: var(--text-muted);
+}
+.year-select:focus {
+  border-color: var(--accent);
+}
 .contrib-scroll {
   overflow-x: auto;
   padding-bottom: 6px;
