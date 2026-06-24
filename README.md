@@ -40,7 +40,9 @@ Enter any GitHub username to reveal contributions, account age, active days, str
 - 🔗 **Shareable profile pages** — every user gets a clean URL (`/username`) with a **dynamic OG image**, so pasted links auto-unfurl into a rich stats card on Twitter / LinkedIn / WhatsApp
 - 🪪 **Dev Card** — one combined hero card (avatar + rank + key stats + mini heatmap) with **5 gradient themes**, made to share as a single image
 - 🥷 **Developer rank** — a fun tier (Code Explorer → Open-Source Legend) computed from your stats
-- 🏅 **Achievements** — unlockable badges: 1K Club, Streak Master, Polyglot, Star Collector, Veteran and more
+- 🏅 **Achievements & badges** — 23 unlockable badges with a **rarity system** (common → legendary). Each badge has its **own shareable link** (`/badge/username/id`) that unfurls into a sticker image, Holopin-style
+- 🎯 **Missions** — locked achievements shown as goals with live progress bars
+- 📈 **Charts** — a languages donut and a monthly "contribution trend" area chart
 - ⚔️ **Compare two developers** side by side with a winner — shareable via link (`/compare?a=…&b=…`)
 - 🟩 **Contribution graph** — full account history, GitHub-style heatmap with a **year selector** dropdown
 - 📊 **Contribution breakdown** — view your activity **year / month / week / day** wise with a toggle

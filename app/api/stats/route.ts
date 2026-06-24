@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     );
   }
 
-  try {
+  try { 
     const stats = await getGithubStats(username);
     return NextResponse.json(stats, {
       headers: {

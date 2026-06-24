@@ -7,7 +7,10 @@ import ContributionGraph from "@/components/ContributionGraph";
 import ActivityBreakdown from "@/components/ActivityBreakdown";
 import DevCard from "@/components/DevCard";
 import Achievements from "@/components/Achievements";
+import Missions from "@/components/Missions";
 import WeekdayCard from "@/components/WeekdayCard";
+import TrendChart from "@/components/TrendChart";
+import DonutChart from "@/components/DonutChart";
 import Confetti from "@/components/Confetti";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import {
@@ -19,6 +22,8 @@ import {
   UsersIcon,
   RepoIcon,
   BarsIcon,
+  GeoIcon,
+  BuildingIcon,
 } from "@/components/icons";
 import { LEVEL_COLORS, colorForLanguage } from "@/lib/colors";
 
@@ -63,6 +68,7 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
   return (
     <>
       <Confetti fire={handle} />
+
       <section className="profile">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={user.avatarUrl} alt={`${handle} avatar`} />
@@ -72,6 +78,18 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
             @{handle}
           </a>
           {user.bio && <p className="bio">{user.bio}</p>}
+          <div className="profile-meta">
+            {user.location && (
+              <span>
+                <GeoIcon size={13} /> {user.location}
+              </span>
+            )}
+            {user.company && (
+              <span>
+                <BuildingIcon size={13} /> {user.company}
+              </span>
+            )}
+          </div>
         </div>
         <div className="profile-actions">
           <button className="action-btn" onClick={copyLink}>
@@ -86,76 +104,20 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
       <div className="grid">
         <DevCard stats={stats} />
 
-        {/* Contribution graph spans full width */}
-        <ShareCard
-          title="Contribution graph"
-          icon={<GraphIcon />}
-          filename={`${handle}-contributions`}
-          className="span-all"
-        >
-          <ContributionGraph days={c.days} />
-          <div className="contrib-legend">
-            <span>Less</span>
-            {LEVEL_COLORS.map((color, i) => (
-              <span
-                key={i}
-                className="contrib-cell"
-                style={{ backgroundColor: color }}
-              />
-            ))}
-            <span>More</span>
-          </div>
-          <div className="mini-stats">
-            <Mini value={fmt(c.total)} label="total contributions" />
-            <Mini value={fmt(c.activeDays)} label="active days" />
-            <Mini value={`${c.longestStreak}d`} label="longest streak" />
-            <Mini value={`${c.currentStreak}d`} label="current streak" />
-            {c.busiestDay && (
-              <Mini
-                value={fmt(c.busiestDay.count)}
-                label={`best day (${c.busiestDay.date})`}
-              />
-            )}
-          </div>
-        </ShareCard>
+        <h2 className="section-title span-all">Overview</h2>
 
-        <ShareCard
-          title="Contribution breakdown"
-          icon={<BarsIcon />}
-          filename={`${handle}-breakdown`}
-          className="span-all"
-        >
-          <ActivityBreakdown days={c.days} />
-        </ShareCard>
-
-        <WeekdayCard stats={stats} />
-
-        <Achievements stats={stats} />
-
-        <ShareCard
-          title="Total contributions"
-          icon={<GraphIcon />}
-          filename={`${handle}-total`}
-        >
+        <ShareCard title="Total contributions" icon={<GraphIcon />} filename={`${handle}-total`}>
           <div className="stat-value green">
             <AnimatedNumber value={c.total} />
           </div>
           <div className="stat-sub">commits, PRs, issues &amp; reviews</div>
         </ShareCard>
 
-        <ShareCard
-          title="Account age"
-          icon={<CalendarIcon />}
-          filename={`${handle}-age`}
-        >
+        <ShareCard title="Account age" icon={<CalendarIcon />} filename={`${handle}-age`}>
           <div className="stat-value">
             {ageYears >= 1 ? (
               <>
-                <AnimatedNumber
-                  value={ageYears}
-                  format={(n) => n.toFixed(1)}
-                />{" "}
-                yrs
+                <AnimatedNumber value={ageYears} format={(n) => n.toFixed(1)} /> yrs
               </>
             ) : (
               <AnimatedNumber value={c.accountAgeDays} suffix=" days" />
@@ -171,25 +133,16 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
           </div>
         </ShareCard>
 
-        <ShareCard
-          title="Active days"
-          icon={<FireIcon />}
-          filename={`${handle}-active`}
-        >
+        <ShareCard title="Active days" icon={<FireIcon />} filename={`${handle}-active`}>
           <div className="stat-value green">
             <AnimatedNumber value={activePct} suffix="%" />
           </div>
           <div className="stat-sub">
-            {fmt(c.activeDays)} of {fmt(c.trackedDays)} tracked days had
-            contributions
+            {fmt(c.activeDays)} of {fmt(c.trackedDays)} tracked days
           </div>
         </ShareCard>
 
-        <ShareCard
-          title="Followers"
-          icon={<UsersIcon />}
-          filename={`${handle}-followers`}
-        >
+        <ShareCard title="Followers" icon={<UsersIcon />} filename={`${handle}-followers`}>
           <div className="stat-value blue">
             <AnimatedNumber value={user.followers} />
           </div>
@@ -198,16 +151,85 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
           </div>
         </ShareCard>
 
-        <ShareCard
-          title="Total stars"
-          icon={<StarIcon />}
-          filename={`${handle}-stars`}
-        >
+        <ShareCard title="Total stars" icon={<StarIcon />} filename={`${handle}-stars`}>
           <div className="stat-value" style={{ color: "#e3b341" }}>
             <AnimatedNumber value={stats.totalStars} />
           </div>
-          <div className="stat-sub">earned across public repositories</div>
+          <div className="stat-sub">earned across public repos</div>
         </ShareCard>
+
+        <ShareCard title="Longest streak" icon={<FireIcon />} filename={`${handle}-streak`}>
+          <div className="stat-value" style={{ color: "#ff7b72" }}>
+            <AnimatedNumber value={c.longestStreak} suffix="d" />
+          </div>
+          <div className="stat-sub">current streak {c.currentStreak} days</div>
+        </ShareCard>
+
+        <h2 className="section-title span-all">Activity</h2>
+
+        <ShareCard
+          title="Contribution graph"
+          icon={<GraphIcon />}
+          filename={`${handle}-contributions`}
+          className="span-all"
+        >
+          <ContributionGraph days={c.days} />
+          <div className="contrib-legend">
+            <span>Less</span>
+            {LEVEL_COLORS.map((color, i) => (
+              <span key={i} className="contrib-cell" style={{ backgroundColor: color }} />
+            ))}
+            <span>More</span>
+          </div>
+        </ShareCard>
+
+        <TrendChart days={c.days} login={handle} />
+
+        <WeekdayCard stats={stats} />
+
+        <ShareCard
+          title="Contribution breakdown"
+          icon={<BarsIcon />}
+          filename={`${handle}-breakdown`}
+          className="span-all"
+        >
+          <ActivityBreakdown days={c.days} />
+        </ShareCard>
+
+        <h2 className="section-title span-all">Code</h2>
+
+        {languages.length > 0 && (
+          <ShareCard
+            title="Top languages"
+            icon={<CodeIcon />}
+            filename={`${handle}-languages`}
+            className="span-all"
+          >
+            <div className="lang-layout">
+              <DonutChart data={languages} />
+              <div className="lang-right">
+                <div className="lang-bar">
+                  {languages.map((l) => (
+                    <span
+                      key={l.name}
+                      style={{ width: `${l.percentage}%`, backgroundColor: l.color }}
+                      title={`${l.name} ${l.percentage}%`}
+                    />
+                  ))}
+                </div>
+                <div className="lang-list">
+                  {languages.map((l) => (
+                    <div className="lang-item" key={l.name}>
+                      <span className="lang-dot" style={{ backgroundColor: l.color }} />
+                      <span className="lang-name">{l.name}</span>
+                      <span className="lang-pct">{l.percentage}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ShareCard>
+        )}
 
         {topRepos.items.length > 0 && (
           <ShareCard
@@ -226,27 +248,15 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
                 const max = topRepos.items[0].contributions || 1;
                 return (
                   <li className="repo-row" key={r.name}>
-                    <span className={`repo-rank ${i === 0 ? "top" : ""}`}>
-                      {i + 1}
-                    </span>
+                    <span className={`repo-rank ${i === 0 ? "top" : ""}`}>{i + 1}</span>
                     <div className="repo-main">
-                      <a
-                        className="repo-name"
-                        href={r.url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
+                      <a className="repo-name" href={r.url} target="_blank" rel="noreferrer">
                         {r.name}
                       </a>
                       <span className="repo-track">
                         <span
                           className="repo-fill animate-bar"
-                          style={{
-                            width: `${Math.max(
-                              (r.contributions / max) * 100,
-                              3
-                            )}%`,
-                          }}
+                          style={{ width: `${Math.max((r.contributions / max) * 100, 3)}%` }}
                         />
                       </span>
                     </div>
@@ -259,9 +269,7 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
                         <span className="repo-lang">
                           <span
                             className="lang-dot"
-                            style={{
-                              backgroundColor: colorForLanguage(r.language),
-                            }}
+                            style={{ backgroundColor: colorForLanguage(r.language) }}
                           />
                           {r.language}
                         </span>
@@ -274,45 +282,13 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
           </ShareCard>
         )}
 
-        {languages.length > 0 && (
-          <ShareCard
-            title="Top languages"
-            icon={<CodeIcon />}
-            filename={`${handle}-languages`}
-            className="span-all"
-          >
-            <div className="lang-bar">
-              {languages.map((l) => (
-                <span
-                  key={l.name}
-                  style={{ width: `${l.percentage}%`, backgroundColor: l.color }}
-                  title={`${l.name} ${l.percentage}%`}
-                />
-              ))}
-            </div>
-            <div className="lang-list">
-              {languages.map((l) => (
-                <div className="lang-item" key={l.name}>
-                  <span className="lang-dot" style={{ backgroundColor: l.color }} />
-                  <span className="lang-name">{l.name}</span>
-                  <span className="lang-pct">{l.percentage}%</span>
-                </div>
-              ))}
-            </div>
-          </ShareCard>
-        )}
+        <h2 className="section-title span-all">Achievements &amp; Missions</h2>
+
+        <Achievements stats={stats} />
+        <Missions stats={stats} />
       </div>
 
       {toast && <div className="toast">{toast}</div>}
     </>
-  );
-}
-
-function Mini({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="mini-stat">
-      <div className="v">{value}</div>
-      <div className="l">{label}</div>
-    </div>
   );
 }

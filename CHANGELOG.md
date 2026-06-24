@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Premium icon set** — switched to inlined Bootstrap Icons (render in shared images).
+- **Holopin-style shareable badges** — each achievement has its own page
+  (`/badge/username/id`) with a dynamic sticker OG image and per-badge share/copy.
+- **Rarity system** — badges are common / rare / epic / legendary with colored
+  rings and glow.
+- **Missions** card — locked achievements shown as goals with progress bars.
+- **Charts** — a donut chart for languages and an area "Contribution trend"
+  chart for monthly activity.
+- Restructured the dashboard into **Overview / Activity / Code / Achievements**
+  sections.
+
+### Previously added
 - **Shareable profile pages** at `/username` with dynamic OpenGraph images so
   links auto-unfurl on social media.
 - **Dev Card** — a combined hero card with a developer rank/tier and 5 gradient

@@ -1156,6 +1156,255 @@ a:hover {
   font-weight: 600;
 }
 
+/* ---------- section titles ---------- */
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 18px 0 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-muted);
+}
+.profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.profile-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ---------- sticker badges ---------- */
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  gap: 18px;
+}
+.sticker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.sticker-ring {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+}
+.sticker-core {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #0d1117;
+  display: grid;
+  place-items: center;
+}
+.sticker-check {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  background: #0d1117;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+.sticker-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+.sticker-rarity {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+.sticker-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.sticker-share:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+/* ---------- missions ---------- */
+.mission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mission {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.mission-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.mission-body {
+  flex: 1;
+  min-width: 0;
+}
+.mission-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.mission-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+.mission-prog {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.mission-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 7px;
+}
+.mission-track {
+  height: 8px;
+  background: var(--bg);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.mission-fill {
+  height: 100%;
+  border-radius: 5px;
+}
+
+/* ---------- languages layout + donut ---------- */
+.lang-layout {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.donut-wrap {
+  flex-shrink: 0;
+}
+.lang-right {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- trend chart ---------- */
+.trend-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-top: 6px;
+  overflow: visible;
+}
+
+/* ---------- badge page ---------- */
+.badge-page {
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 40px 16px 60px;
+}
+.badge-page-sticker {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 7px;
+  margin: 0 auto 24px;
+}
+.badge-page-core {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #0d1117;
+  display: grid;
+  place-items: center;
+}
+.badge-page-rarity {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+.badge-page-title {
+  font-size: 34px;
+  margin: 8px 0 4px;
+}
+.badge-page-desc {
+  color: var(--text-muted);
+  margin: 0 0 18px;
+}
+.badge-page-by {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+.badge-page-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+.badge-share-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+.badge-share-actions .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.badge-page-profile {
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .lang-layout {
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
 /* ---------- skeleton ---------- */
 @keyframes pulse {
   0%,
