@@ -1,4 +1,5 @@
 import { colorForLanguage } from "./colors";
+import { computeRank, computeFunFacts } from "./rank";
 import type {
   ContribDay,
   GithubStats,
@@ -285,19 +286,25 @@ function computeStreaks(days: ContribDay[]): {
   return { longest, current };
 }
 
-export async function getGithubStats(username: string): Promise<GithubStats> {
+function cleanUsername(username: string): string {
   const clean = username.trim().replace(/^@/, "");
   if (!/^[a-zA-Z0-9-]{1,39}$/.test(clean)) {
     throw new GithubError("Please enter a valid GitHub username.", 400);
   }
+  return clean;
+}
+
+// Everything except top repositories — cheap enough for OG image generation.
+export async function getCoreStats(
+  username: string
+): Promise<Omit<GithubStats, "topRepos">> {
+  const clean = cleanUsername(username);
 
   const [user, repos, contrib] = await Promise.all([
     fetchUser(clean),
     fetchRepos(clean),
     fetchContributions(clean),
   ]);
-
-  const topRepos = await getTopRepos(clean, user.created_at);
 
   // The source API groups days by year in descending order and includes future
   // dates for the rest of the current year. Sort ascending and drop the future
@@ -323,6 +330,14 @@ export async function getGithubStats(username: string): Promise<GithubStats> {
   const totalStars = repos
     .filter((r) => !r.fork)
     .reduce((a, r) => a + r.stargazers_count, 0);
+
+  const rank = computeRank({
+    totalContributions: total,
+    totalStars,
+    followers: user.followers,
+    longestStreak: longest,
+    activeDays,
+  });
 
   return {
     user: {
@@ -351,8 +366,15 @@ export async function getGithubStats(username: string): Promise<GithubStats> {
       busiestDay,
     },
     languages: buildLanguageStats(repos),
-    topRepos,
     totalStars,
+    rank,
+    funFacts: computeFunFacts(days),
     generatedAt: new Date().toISOString(),
   };
+}
+
+export async function getGithubStats(username: string): Promise<GithubStats> {
+  const core = await getCoreStats(username);
+  const topRepos = await getTopRepos(core.user.login, core.user.createdAt);
+  return { ...core, topRepos };
 }

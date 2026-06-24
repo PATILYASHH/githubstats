@@ -26,6 +26,20 @@ export interface TopRepos {
   items: RepoContribution[];
 }
 
+export interface Rank {
+  title: string;
+  emoji: string;
+  level: number; // 1..7
+  score: number;
+  color: string;
+  blurb: string;
+}
+
+export interface FunFacts {
+  bestWeekday: string | null; // e.g. "Tuesday"
+  busiestMonth: string | null; // e.g. "November 2025"
+}
+
 export interface GithubStats {
   user: {
     login: string;
@@ -55,5 +69,7 @@ export interface GithubStats {
   languages: LanguageStat[];
   topRepos: TopRepos;
   totalStars: number;
+  rank: Rank;
+  funFacts: FunFacts;
   generatedAt: string;
 }
