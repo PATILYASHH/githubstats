@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Questions & Discussions
+    url: https://github.com/PATILYASHH/githubstats/discussions
+    about: Ask questions and share ideas with the community.
+  - name: 🌐 Live demo
+    url: https://githubstatss.vercel.app
+    about: Try GitHubStats before reporting an issue.

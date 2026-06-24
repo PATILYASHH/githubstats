@@ -2,7 +2,27 @@
   "name": "githubstats",
   "version": "1.0.0",
   "private": true,
-  "description": "Showcase your GitHub contributions, stats and languages — share any card as an image.",
+  "description": "Showcase and share your GitHub story — contribution graph, account age, active days, streaks, top languages and more, exportable as images.",
+  "keywords": [
+    "github",
+    "github-stats",
+    "github-profile",
+    "contribution-graph",
+    "developer-stats",
+    "nextjs",
+    "react",
+    "open-source",
+    "vercel"
+  ],
+  "homepage": "https://githubstatss.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PATILYASHH/githubstats.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PATILYASHH/githubstats/issues"
+  },
+  "author": "Yash Patil (https://github.com/PATILYASHH)",
   "license": "MIT",
   "scripts": {
     "dev": "next dev",
