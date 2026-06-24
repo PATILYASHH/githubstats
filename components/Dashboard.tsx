@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import type { GithubStats } from "@/lib/types";
 import ShareCard from "@/components/ShareCard";
 import ContributionGraph from "@/components/ContributionGraph";
 import ActivityBreakdown from "@/components/ActivityBreakdown";
 import DevCard from "@/components/DevCard";
+import Achievements from "@/components/Achievements";
+import WeekdayCard from "@/components/WeekdayCard";
+import Confetti from "@/components/Confetti";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import {
   GraphIcon,
@@ -29,17 +33,53 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
   const handle = user.login;
   const ageYears = c.accountAgeDays / 365.25;
 
+  const [toast, setToast] = useState<string | null>(null);
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  }
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast("🔗 Profile link copied!");
+    } catch {
+      showToast("Couldn't copy link");
+    }
+  }
+  async function shareProfile() {
+    const url = window.location.href;
+    const navAny = navigator as Navigator;
+    if (navAny.share) {
+      try {
+        await navAny.share({ title: `${handle} on GitHubStats`, url });
+      } catch {
+        /* dismissed */
+      }
+    } else {
+      copyLink();
+    }
+  }
+
   return (
     <>
+      <Confetti fire={handle} />
       <section className="profile">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={user.avatarUrl} alt={`${handle} avatar`} />
-        <div>
+        <div className="profile-id">
           <p className="name">{user.name || handle}</p>
           <a className="login" href={user.htmlUrl} target="_blank" rel="noreferrer">
             @{handle}
           </a>
           {user.bio && <p className="bio">{user.bio}</p>}
+        </div>
+        <div className="profile-actions">
+          <button className="action-btn" onClick={copyLink}>
+            📋 Copy link
+          </button>
+          <button className="action-btn primary" onClick={shareProfile}>
+            🔗 Share
+          </button>
         </div>
       </section>
 
@@ -87,6 +127,10 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
         >
           <ActivityBreakdown days={c.days} />
         </ShareCard>
+
+        <WeekdayCard stats={stats} />
+
+        <Achievements stats={stats} />
 
         <ShareCard
           title="Total contributions"
@@ -258,6 +302,8 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
           </ShareCard>
         )}
       </div>
+
+      {toast && <div className="toast">{toast}</div>}
     </>
   );
 }

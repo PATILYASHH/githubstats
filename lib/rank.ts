@@ -84,3 +84,12 @@ export function computeFunFacts(days: ContribDay[]): FunFacts {
 
   return { bestWeekday, busiestMonth };
 }
+
+// Total contributions per weekday (index 0 = Sunday … 6 = Saturday).
+export function computeWeekdayHistogram(days: ContribDay[]): number[] {
+  const hist = new Array(7).fill(0);
+  for (const d of days) {
+    hist[new Date(d.date + "T00:00:00").getDay()] += d.count;
+  }
+  return hist;
+}

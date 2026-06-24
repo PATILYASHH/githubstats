@@ -71,5 +71,6 @@ export interface GithubStats {
   totalStars: number;
   rank: Rank;
   funFacts: FunFacts;
+  weekdayHistogram: number[]; // 7 values, Sun..Sat
   generatedAt: string;
 }

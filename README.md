@@ -37,18 +37,20 @@ Enter any GitHub username to reveal contributions, account age, active days, str
 
 ## Features
 
+- 🔗 **Shareable profile pages** — every user gets a clean URL (`/username`) with a **dynamic OG image**, so pasted links auto-unfurl into a rich stats card on Twitter / LinkedIn / WhatsApp
+- 🪪 **Dev Card** — one combined hero card (avatar + rank + key stats + mini heatmap) with **5 gradient themes**, made to share as a single image
+- 🥷 **Developer rank** — a fun tier (Code Explorer → Open-Source Legend) computed from your stats
+- 🏅 **Achievements** — unlockable badges: 1K Club, Streak Master, Polyglot, Star Collector, Veteran and more
+- ⚔️ **Compare two developers** side by side with a winner — shareable via link (`/compare?a=…&b=…`)
 - 🟩 **Contribution graph** — full account history, GitHub-style heatmap with a **year selector** dropdown
 - 📊 **Contribution breakdown** — view your activity **year / month / week / day** wise with a toggle
+- 📅 **When you code** — your contribution rhythm across the week
 - 🏆 **Top repositories** — your top 5 repos ranked by commits (all-time with a token, recent activity otherwise)
-- 🔢 **Total contributions** across commits, PRs, issues & reviews
-- 📅 **Account age** — years and exact days since the account was created
-- 🔥 **Active days** — how many days actually had contributions (the "green" days), shown as a percentage
-- ⚡ **Streaks** — longest and current streak, plus your busiest day ever
-- 👥 **Followers, repos & total stars** earned across public repositories
-- 🧩 **Top languages** with the official GitHub color palette and a proportional bar
+- 🔢 **Total contributions**, **account age**, **active days %**, **streaks**, **followers, repos & stars**
+- 🧩 **Top languages** with the official GitHub color palette
 - 🖼️ **Share any card as an image** — native share sheet on supported devices, crisp 2× PNG download everywhere else
-- 🌙 **GitHub dark theme** UI, fully responsive
-- 🔓 **No login, no database** — works with zero secrets
+- ✨ **Polished, interactive UI** — count-up numbers, animated bars, hover effects, a confetti burst 🎉 and copy-link sharing
+- 🌙 **GitHub dark theme**, fully responsive · 🔓 **No login, no database** — works with zero secrets
 
 ## Screenshots
 

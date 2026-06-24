@@ -1,5 +1,5 @@
 import { colorForLanguage } from "./colors";
-import { computeRank, computeFunFacts } from "./rank";
+import { computeRank, computeFunFacts, computeWeekdayHistogram } from "./rank";
 import type {
   ContribDay,
   GithubStats,
@@ -369,6 +369,7 @@ export async function getCoreStats(
     totalStars,
     rank,
     funFacts: computeFunFacts(days),
+    weekdayHistogram: computeWeekdayHistogram(days),
     generatedAt: new Date().toISOString(),
   };
 }

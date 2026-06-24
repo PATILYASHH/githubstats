@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Shareable profile pages** at `/username` with dynamic OpenGraph images so
+  links auto-unfurl on social media.
+- **Dev Card** — a combined hero card with a developer rank/tier and 5 gradient
+  share themes.
+- **Achievements** card with unlockable badges.
+- **Compare two developers** at `/compare` (deep-linkable via `?a=&b=`).
+- **When you code** weekday-rhythm card.
+- UI polish: count-up numbers, animated bars, card hover, a confetti burst,
+  copy-link / share buttons with toasts, and custom scrollbars.
 - **Contribution breakdown** card with a year / month / week / day toggle.
 - **Top repositories** card ranking your top 5 repos by commits (accurate
   all-time counts via GraphQL when `GITHUB_TOKEN` is set, recent public push
