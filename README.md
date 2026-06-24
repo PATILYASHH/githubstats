@@ -37,10 +37,6 @@ Enter any GitHub username to reveal contributions, account age, active days, str
 
 ## Features
 
-- 📌 **Embeddable README card** — drop a live, auto-updating stats card into your GitHub profile README (6 themes)
-- 🎁 **GitHub Wrapped** — a Spotify-Wrapped-style year-in-review story at `/wrapped/username`
-- 🧬 **Coding personality** — your developer archetype (Marathoner, Sprinter, Polyglot Explorer…) with trait bars
-- 🎤 **Roast / Hype mode** — witty auto-generated commentary on your stats
 - 🔗 **Shareable profile pages** — every user gets a clean URL (`/username`) with a **dynamic OG image**, so pasted links auto-unfurl into a rich stats card on Twitter / LinkedIn / WhatsApp
 - 🪪 **Dev Card** — one combined hero card (avatar + rank + key stats + mini heatmap) with **5 gradient themes**, made to share as a single image
 - 🥷 **Developer rank** — a fun tier (Code Explorer → Open-Source Legend) computed from your stats
@@ -66,20 +62,6 @@ Enter any GitHub username to reveal contributions, account age, active days, str
 > docs/screenshot-dashboard.png
 > docs/screenshot-card.png
 > ```
-
-## Embed in your README
-
-Add a live, auto-updating stats card to your GitHub profile README:
-
-```markdown
-[![My GitHub stats](https://githubstatss.vercel.app/api/card/YOUR_USERNAME.svg)](https://githubstatss.vercel.app/YOUR_USERNAME)
-```
-
-Pick a theme with `?theme=` — `dark` (default), `light`, `midnight`, `dracula`, `forest`, `sunset`:
-
-```markdown
-![stats](https://githubstatss.vercel.app/api/card/YOUR_USERNAME.svg?theme=dracula)
-```
 
 ## How it works
 
