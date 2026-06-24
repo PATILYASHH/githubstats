@@ -1,5 +1,11 @@
 import { colorForLanguage } from "./colors";
-import type { ContribDay, GithubStats, LanguageStat } from "./types";
+import type {
+  ContribDay,
+  GithubStats,
+  LanguageStat,
+  RepoContribution,
+  TopRepos,
+} from "./types";
 
 const GH_API = "https://api.github.com";
 // Free, no-auth contribution calendar API (covers full account history).
@@ -120,6 +126,132 @@ function buildLanguageStats(repos: GhRepo[]): LanguageStat[] {
     .slice(0, 8);
 }
 
+// --- Top repositories by commits ---------------------------------------
+
+// Accurate, all-time commit counts per repository via the GraphQL API.
+// Requires GITHUB_TOKEN. One request: a year-aliased query covering the whole
+// account lifetime, aggregated client-side.
+async function fetchTopReposGraphQL(
+  username: string,
+  createdAt: string
+): Promise<RepoContribution[]> {
+  const startYear = new Date(createdAt).getFullYear();
+  const endYear = new Date().getFullYear();
+  const years: number[] = [];
+  for (let y = startYear; y <= endYear; y++) years.push(y);
+
+  const aliases = years
+    .map(
+      (y) => `y${y}: contributionsCollection(
+        from: "${y}-01-01T00:00:00Z", to: "${y}-12-31T23:59:59Z") {
+        commitContributionsByRepository(maxRepositories: 100) {
+          repository { nameWithOwner url stargazerCount primaryLanguage { name } }
+          contributions { totalCount }
+        }
+      }`
+    )
+    .join("\n");
+
+  const query = `query { user(login: "${username}") { ${aliases} } }`;
+
+  const res = await fetch(`${GH_API}/graphql`, {
+    method: "POST",
+    headers: { ...ghHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+    next: { revalidate: 60 * 30 },
+  });
+  if (!res.ok) throw new GithubError("GraphQL request failed.", res.status);
+
+  const json = await res.json();
+  const user = json?.data?.user;
+  if (!user) throw new GithubError("GraphQL returned no data.", 502);
+
+  const agg = new Map<string, RepoContribution>();
+  for (const y of years) {
+    const block = user[`y${y}`];
+    const list = block?.commitContributionsByRepository ?? [];
+    for (const entry of list) {
+      const repo = entry.repository;
+      if (!repo) continue;
+      const name = repo.nameWithOwner as string;
+      const count = entry.contributions?.totalCount ?? 0;
+      const existing = agg.get(name);
+      if (existing) {
+        existing.contributions += count;
+      } else {
+        agg.set(name, {
+          name,
+          url: repo.url,
+          contributions: count,
+          stars: repo.stargazerCount,
+          language: repo.primaryLanguage?.name ?? null,
+        });
+      }
+    }
+  }
+
+  return [...agg.values()]
+    .sort((a, b) => b.contributions - a.contributions)
+    .slice(0, 5);
+}
+
+// No-token fallback: approximate top repos from recent public push activity.
+async function fetchTopReposEvents(
+  username: string
+): Promise<RepoContribution[]> {
+  const agg = new Map<string, RepoContribution>();
+  for (let page = 1; page <= 3; page++) {
+    const res = await fetch(
+      `${GH_API}/users/${encodeURIComponent(
+        username
+      )}/events/public?per_page=100&page=${page}`,
+      { headers: ghHeaders(), next: { revalidate: 60 * 15 } }
+    );
+    if (!res.ok) break;
+    const events: any[] = await res.json();
+    for (const ev of events) {
+      if (ev.type !== "PushEvent") continue;
+      const name: string = ev.repo?.name;
+      if (!name) continue;
+      // The public events feed strips commit counts from the payload, so each
+      // PushEvent counts as at least one push (a lower bound on commits).
+      const inc = ev.payload?.distinct_size ?? ev.payload?.size ?? 1;
+      const existing = agg.get(name);
+      if (existing) {
+        existing.contributions += inc;
+      } else {
+        agg.set(name, {
+          name,
+          url: `https://github.com/${name}`,
+          contributions: inc,
+        });
+      }
+    }
+    if (events.length < 100) break;
+  }
+
+  return [...agg.values()]
+    .filter((r) => r.contributions > 0)
+    .sort((a, b) => b.contributions - a.contributions)
+    .slice(0, 5);
+}
+
+async function getTopRepos(
+  username: string,
+  createdAt: string
+): Promise<TopRepos> {
+  if (process.env.GITHUB_TOKEN) {
+    try {
+      const items = await fetchTopReposGraphQL(username, createdAt);
+      if (items.length > 0) return { source: "all-time", items };
+    } catch {
+      // fall through to the public approximation
+    }
+  }
+  const items = await fetchTopReposEvents(username).catch(() => []);
+  return { source: "recent", items };
+}
+
 function computeStreaks(days: ContribDay[]): {
   longest: number;
   current: number;
@@ -134,13 +266,17 @@ function computeStreaks(days: ContribDay[]): {
       run = 0;
     }
   }
-  // Current streak: walk backwards from the most recent day. Allow today to be
-  // empty (the user may simply not have committed yet today).
+  // Current streak: the calendar includes future dates for the rest of the
+  // year (all empty), so start from today, not the end of the array.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  let start = days.length - 1;
+  while (start >= 0 && days[start].date > todayStr) start--;
+
   let current = 0;
-  for (let i = days.length - 1; i >= 0; i--) {
+  for (let i = start; i >= 0; i--) {
     if (days[i].count > 0) {
       current++;
-    } else if (i === days.length - 1) {
+    } else if (i === start) {
       continue; // today empty — keep counting from yesterday
     } else {
       break;
@@ -161,11 +297,16 @@ export async function getGithubStats(username: string): Promise<GithubStats> {
     fetchContributions(clean),
   ]);
 
-  const days: ContribDay[] = contrib.contributions.map((c) => ({
-    date: c.date,
-    count: c.count,
-    level: c.level,
-  }));
+  const topRepos = await getTopRepos(clean, user.created_at);
+
+  // The source API groups days by year in descending order and includes future
+  // dates for the rest of the current year. Sort ascending and drop the future
+  // so the heatmap, breakdown and streaks all end at today.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const days: ContribDay[] = contrib.contributions
+    .map((c) => ({ date: c.date, count: c.count, level: c.level }))
+    .filter((d) => d.date <= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   const total = Object.values(contrib.total).reduce((a, b) => a + b, 0);
   const activeDays = days.filter((d) => d.count > 0).length;
@@ -210,6 +351,7 @@ export async function getGithubStats(username: string): Promise<GithubStats> {
       busiestDay,
     },
     languages: buildLanguageStats(repos),
+    topRepos,
     totalStars,
     generatedAt: new Date().toISOString(),
   };

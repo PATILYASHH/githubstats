@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import type { GithubStats } from "@/lib/types";
 import ShareCard from "@/components/ShareCard";
 import ContributionGraph from "@/components/ContributionGraph";
+import ActivityBreakdown from "@/components/ActivityBreakdown";
 import {
   GithubIcon,
   GraphIcon,
@@ -12,8 +13,10 @@ import {
   CodeIcon,
   StarIcon,
   UsersIcon,
+  RepoIcon,
+  BarsIcon,
 } from "@/components/icons";
-import { LEVEL_COLORS } from "@/lib/colors";
+import { LEVEL_COLORS, colorForLanguage } from "@/lib/colors";
 
 const EXAMPLES = ["torvalds", "PATILYASHH", "gaearon", "sindresorhus"];
 
@@ -129,7 +132,7 @@ export default function Home() {
 }
 
 function Dashboard({ stats }: { stats: GithubStats }) {
-  const { user, contributions: c, languages } = stats;
+  const { user, contributions: c, languages, topRepos } = stats;
   const activePct =
     c.trackedDays > 0 ? Math.round((c.activeDays / c.trackedDays) * 100) : 0;
   const handle = user.login;
@@ -180,6 +183,15 @@ function Dashboard({ stats }: { stats: GithubStats }) {
               />
             )}
           </div>
+        </ShareCard>
+
+        <ShareCard
+          title="Contribution breakdown"
+          icon={<BarsIcon />}
+          filename={`${handle}-breakdown`}
+          className="span-all"
+        >
+          <ActivityBreakdown days={c.days} />
         </ShareCard>
 
         <ShareCard
@@ -239,6 +251,71 @@ function Dashboard({ stats }: { stats: GithubStats }) {
           </div>
           <div className="stat-sub">earned across public repositories</div>
         </ShareCard>
+
+        {topRepos.items.length > 0 && (
+          <ShareCard
+            title="Top repositories"
+            icon={<RepoIcon />}
+            filename={`${handle}-top-repos`}
+            className="span-all"
+          >
+            <p className="repos-sub">
+              {topRepos.source === "all-time"
+                ? "Ranked by your all-time commits"
+                : "Ranked by recent public push activity (set GITHUB_TOKEN for all-time commits)"}
+            </p>
+            <ol className="repo-list">
+              {topRepos.items.map((r, i) => {
+                const max = topRepos.items[0].contributions || 1;
+                return (
+                  <li className="repo-row" key={r.name}>
+                    <span className={`repo-rank ${i === 0 ? "top" : ""}`}>
+                      {i + 1}
+                    </span>
+                    <div className="repo-main">
+                      <a
+                        className="repo-name"
+                        href={r.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {r.name}
+                      </a>
+                      <span className="repo-track">
+                        <span
+                          className="repo-fill"
+                          style={{
+                            width: `${Math.max(
+                              (r.contributions / max) * 100,
+                              3
+                            )}%`,
+                          }}
+                        />
+                      </span>
+                    </div>
+                    <div className="repo-meta">
+                      <span className="repo-commits">
+                        {fmt(r.contributions)}{" "}
+                        {topRepos.source === "all-time" ? "commits" : "pushes"}
+                      </span>
+                      {r.language && (
+                        <span className="repo-lang">
+                          <span
+                            className="lang-dot"
+                            style={{
+                              backgroundColor: colorForLanguage(r.language),
+                            }}
+                          />
+                          {r.language}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </ShareCard>
+        )}
 
         {languages.length > 0 && (
           <ShareCard

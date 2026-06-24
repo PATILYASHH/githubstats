@@ -8,8 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Contribution breakdown** card with a year / month / week / day toggle.
+- **Top repositories** card ranking your top 5 repos by commits (accurate
+  all-time counts via GraphQL when `GITHUB_TOKEN` is set, recent public push
+  activity otherwise).
 - Community health files: `CONTRIBUTING`, `CODE_OF_CONDUCT`, `SECURITY`,
   issue & pull request templates, and this changelog.
+
+### Fixed
+- Contribution days are now sorted chronologically and future dates are
+  excluded — fixes the **current streak** (previously always 0) and the
+  active-days percentage.
 
 ## [1.0.0] - 2026-06-24
 

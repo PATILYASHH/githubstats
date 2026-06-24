@@ -367,6 +367,163 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- Activity breakdown ---------- */
+.breakdown-tabs {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+.breakdown-tab {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.breakdown-tab:hover {
+  color: var(--text);
+}
+.breakdown-tab.active {
+  background: var(--bg-elevated);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 56px;
+  align-items: center;
+  gap: 12px;
+}
+.breakdown-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.breakdown-track {
+  height: 10px;
+  background: var(--bg);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.breakdown-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #006d32, #39d353);
+  border-radius: 6px;
+}
+.breakdown-count {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 600;
+}
+.breakdown-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 12px 0 0;
+}
+
+/* ---------- Top repositories ---------- */
+.repos-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+.repo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.repo-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.repo-rank {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.repo-rank.top {
+  background: rgba(227, 179, 65, 0.15);
+  border-color: #e3b341;
+  color: #e3b341;
+}
+.repo-main {
+  min-width: 0;
+}
+.repo-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.repo-name:hover {
+  color: var(--accent);
+}
+.repo-track {
+  display: block;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.repo-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2f81f7, #39d353);
+  border-radius: 4px;
+}
+.repo-meta {
+  text-align: right;
+  white-space: nowrap;
+}
+.repo-commits {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.repo-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
 /* ---------- mini stats row inside contribution card ---------- */
 .mini-stats {
   display: flex;
@@ -414,5 +571,9 @@ a:hover {
   }
   .lang-list {
     grid-template-columns: 1fr;
+  }
+  .breakdown-row {
+    grid-template-columns: 84px 1fr 46px;
+    gap: 8px;
   }
 }

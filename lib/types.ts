@@ -11,6 +11,21 @@ export interface LanguageStat {
   color: string;
 }
 
+export interface RepoContribution {
+  name: string; // owner/repo
+  url: string;
+  contributions: number;
+  stars?: number;
+  language?: string | null;
+}
+
+export interface TopRepos {
+  // "all-time" = accurate commit counts via GraphQL (needs GITHUB_TOKEN).
+  // "recent"   = approximation from the public Events API (~last 90 days).
+  source: "all-time" | "recent";
+  items: RepoContribution[];
+}
+
 export interface GithubStats {
   user: {
     login: string;
@@ -38,6 +53,7 @@ export interface GithubStats {
     busiestDay: ContribDay | null;
   };
   languages: LanguageStat[];
+  topRepos: TopRepos;
   totalStars: number;
   generatedAt: string;
 }

@@ -38,6 +38,8 @@ Enter any GitHub username to reveal contributions, account age, active days, str
 ## Features
 
 - 🟩 **Contribution graph** — full account history, GitHub-style heatmap with a **year selector** dropdown
+- 📊 **Contribution breakdown** — view your activity **year / month / week / day** wise with a toggle
+- 🏆 **Top repositories** — your top 5 repos ranked by commits (all-time with a token, recent activity otherwise)
 - 🔢 **Total contributions** across commits, PRs, issues & reviews
 - 📅 **Account age** — years and exact days since the account was created
 - 🔥 **Active days** — how many days actually had contributions (the "green" days), shown as a percentage
