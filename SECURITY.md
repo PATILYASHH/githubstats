@@ -16,7 +16,7 @@ If you discover a security vulnerability, **please do not open a public issue.**
 
 Instead, report it privately:
 
-- **Email:** banafintech@gmail.com
+- **Email:** patilyasshh@gmail.com
 - Or use GitHub's [private vulnerability reporting](https://github.com/PATILYASHH/githubstats/security/advisories/new)
 
 Please include:
