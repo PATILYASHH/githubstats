@@ -13,6 +13,10 @@ import TrendChart from "@/components/TrendChart";
 import DonutChart from "@/components/DonutChart";
 import Confetti from "@/components/Confetti";
 import CreateCardModal from "@/components/CreateCardModal";
+import PersonalityCard from "@/components/PersonalityCard";
+import RoastCard from "@/components/RoastCard";
+import EmbedCard from "@/components/EmbedCard";
+import Link from "next/link";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import {
   GraphIcon,
@@ -28,6 +32,7 @@ import {
   LinkIcon,
   ShareIcon,
   CardImageIcon,
+  StarsIcon,
 } from "@/components/icons";
 import { LEVEL_COLORS, colorForLanguage } from "@/lib/colors";
 
@@ -97,6 +102,9 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
           </div>
         </div>
         <div className="profile-actions">
+          <Link href={`/wrapped/${handle}`} className="action-btn wrapped">
+            <StarsIcon size={15} /> Wrapped
+          </Link>
           <button className="action-btn create" onClick={() => setCardOpen(true)}>
             <CardImageIcon size={15} /> Create card
           </button>
@@ -115,6 +123,8 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
 
       <div className="grid">
         <DevCard stats={stats} />
+
+        <PersonalityCard stats={stats} />
 
         <h2 className="section-title span-all">Overview</h2>
 
@@ -298,6 +308,11 @@ export default function Dashboard({ stats }: { stats: GithubStats }) {
 
         <Achievements stats={stats} />
         <Missions stats={stats} />
+
+        <h2 className="section-title span-all">Fun &amp; Share</h2>
+
+        <RoastCard stats={stats} />
+        <EmbedCard login={handle} />
       </div>
 
       {toast && <div className="toast">{toast}</div>}

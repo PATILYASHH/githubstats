@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Embeddable README card** — a live SVG endpoint (`/api/card/username.svg`,
+  6 themes) you can drop into your GitHub profile README, plus an in-app
+  "Embed in your README" card with copy + live preview.
+- **GitHub Wrapped** — a Spotify-Wrapped-style story at `/wrapped/username`
+  with swipeable slides and a downloadable summary.
+- **Coding personality** — a developer archetype (Marathoner, Sprinter,
+  Polyglot Explorer…) with trait bars.
+- **Roast / Hype mode** — witty auto-generated commentary on your stats.
 - **Create Card** — a one-click button that generates a single shareable image
   (profile + key stats + mini heatmap + unlocked badges) and shows a **preview
   modal** with Download and Share, instead of sharing directly.
