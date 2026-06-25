@@ -34,7 +34,7 @@ const GAMES: GameCard[] = [
     href: "/games/city",
     icon: "buildings-fill",
     title: "Git City",
-    desc: "Your contributions rebuilt as an explorable 3D city — every commit is a building. Orbit and explore.",
+    desc: "Spend contribution coins to build a city on your plot, then walk the shared 3D city of every developer.",
     status: "live",
     tag: "Beta",
   },

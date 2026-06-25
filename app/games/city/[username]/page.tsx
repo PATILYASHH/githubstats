@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { fetchDays } from "@/lib/games/contributions";
-import GitCityClient from "@/components/GitCityClient";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import GamesNotConfigured from "@/components/GamesNotConfigured";
+import PlotCityClient from "@/components/PlotCityClient";
 import { BIcon } from "@/components/icons";
+import { sanitizeLayout, layoutCost } from "@/lib/games/store";
 
 export const dynamic = "force-dynamic";
 
@@ -15,67 +17,67 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const handle = decodeURIComponent(username);
   return {
     title: `${handle}'s Git City`,
-    description: `Explore ${handle}'s GitHub contributions as a 3D city.`,
+    description: `Explore the city ${handle} built from their GitHub contributions.`,
   };
 }
 
-export default async function CityPage({ params }: Props) {
+export default async function CityView({ params }: Props) {
+  if (!isSupabaseConfigured()) return <GamesNotConfigured />;
+
   const { username } = await params;
   const handle = decodeURIComponent(username);
+  const supabase = await createClient();
 
-  let days: { date: string; count: number }[] = [];
-  let error: string | null = null;
-  try {
-    days = await fetchDays(handle);
-  } catch {
-    error = `Couldn't load contributions for "${handle}".`;
-  }
+  const [{ data: plotRow }, { data: stats }] = await Promise.all([
+    supabase
+      .from("plots")
+      .select("layout, github_login")
+      .ilike("github_login", handle)
+      .maybeSingle(),
+    supabase
+      .from("user_stats")
+      .select("contributions_total")
+      .ilike("github_login", handle)
+      .maybeSingle(),
+  ]);
 
-  const total = days.reduce((a, d) => a + d.count, 0);
-  const built = days.slice(-7 * 52).filter((d) => d.count > 0).length;
+  const layout = sanitizeLayout(plotRow?.layout);
+  const spent = layoutCost(layout);
+  const coins = stats?.contributions_total ?? 0;
 
   return (
     <main className="container">
       <header className="games-subhero">
         <div>
-          <Link href="/games" className="back-link">
-            ← Games
+          <Link href="/games/city/world" className="back-link">
+            ← Explore the city
           </Link>
           <h1>
             <BIcon name="buildings-fill" size={24} /> {handle}&apos;s Git City
           </h1>
-          <p>
-            Every contribution is a building — taller means a busier day. Drag to
-            orbit, scroll to zoom.
-          </p>
         </div>
       </header>
 
-      {error ? (
+      {!plotRow || layout.length === 0 ? (
         <div className="games-empty">
-          <p>{error}</p>
+          <p>{handle} hasn&apos;t built a city yet.</p>
         </div>
       ) : (
         <>
           <div className="city-stats">
             <span>
-              <strong>{built}</strong> buildings (active days, last year)
+              <BIcon name="grid-3x3-gap-fill" size={14} /> <strong>{layout.length}</strong>{" "}
+              structures
             </span>
             <span>
-              <strong>{total.toLocaleString("en-US")}</strong> total contributions
+              <BIcon name="coin" size={14} /> <strong>{spent.toLocaleString("en-US")}</strong>{" "}
+              of {coins.toLocaleString("en-US")} coins spent
             </span>
             <Link href={`/${handle}`} className="city-link">
               View full stats →
             </Link>
           </div>
-
-          <GitCityClient days={days} />
-
-          <p className="city-roadmap">
-            <BIcon name="cone-striped" size={14} /> Coming next: walk the streets
-            in first person, a shared live city of every developer, and an economy
-            where commits are currency to build and decorate.
-          </p>
+          <PlotCityClient layout={layout} />
         </>
       )}
     </main>

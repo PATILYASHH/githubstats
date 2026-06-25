@@ -2298,3 +2298,174 @@ a:hover {
   color: var(--text-muted);
   font-size: 13px;
 }
+
+/* ---- Git City: plot editor ---- */
+.editor {
+  margin-bottom: 48px;
+}
+.editor-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+.coins {
+  font-weight: 800;
+  font-size: 18px;
+  color: #f2cc60;
+}
+.coins-sub {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.editor-err {
+  color: #ff7b72;
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.editor-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(227, 179, 65, 0.1);
+  border: 1px solid rgba(227, 179, 65, 0.4);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.editor-main {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.store {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+.store h3 {
+  margin: 4px 4px 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.store-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px 8px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.store-item:hover {
+  background: var(--bg);
+}
+.store-item.sel {
+  border-color: var(--accent);
+  background: rgba(47, 129, 247, 0.12);
+}
+.store-item.poor {
+  opacity: 0.5;
+}
+.store-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+.store-price {
+  font-size: 12px;
+  color: #f2cc60;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.plot-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.plot-hint {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.plot-grid {
+  display: grid;
+  gap: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  aspect-ratio: 1;
+  max-width: 460px;
+}
+.plot-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  background: #10261a;
+  border: 1px solid var(--border-muted);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.1s;
+}
+.plot-tile:hover {
+  background: #173324;
+  transform: scale(1.05);
+}
+.plot-tile.filled {
+  background: var(--bg);
+  border-color: currentColor;
+}
+
+/* ---- Git City: walkable world ---- */
+.city-world {
+  position: relative;
+}
+.city-world-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(10, 14, 20, 0.55);
+  border-radius: var(--radius);
+  text-align: center;
+  pointer-events: none;
+  color: var(--text);
+}
+.city-world-overlay p {
+  margin: 0;
+  color: var(--text-muted);
+}
+.city-world-overlay strong {
+  font-size: 20px;
+  color: var(--text);
+}
+
+@media (max-width: 640px) {
+  .editor-main {
+    grid-template-columns: 1fr;
+  }
+  .store {
+    max-height: 200px;
+  }
+}

@@ -112,3 +112,30 @@ drop policy if exists "participants update duels" on public.duels;
 create policy "participants update duels"
   on public.duels for update
   using (auth.uid() = challenger_id or auth.uid() = opponent_id);
+
+-- ---------------------------------------------------------------------------
+-- plots: a user's Git City plot (what they've built). layout is a JSON array
+-- of { item, x, z }. login/avatar are denormalized for the city world view.
+-- ---------------------------------------------------------------------------
+create table if not exists public.plots (
+  user_id      uuid primary key references public.profiles (id) on delete cascade,
+  github_login text not null,
+  avatar_url   text,
+  layout       jsonb not null default '[]'::jsonb,
+  updated_at   timestamptz not null default now()
+);
+
+alter table public.plots enable row level security;
+
+-- world-readable (everyone explores everyone's city), owner-only writes.
+drop policy if exists "plots readable by all" on public.plots;
+create policy "plots readable by all"
+  on public.plots for select using (true);
+
+drop policy if exists "users insert own plot" on public.plots;
+create policy "users insert own plot"
+  on public.plots for insert with check (auth.uid() = user_id);
+
+drop policy if exists "users update own plot" on public.plots;
+create policy "users update own plot"
+  on public.plots for update using (auth.uid() = user_id);
