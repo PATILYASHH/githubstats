@@ -18,6 +18,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ error: "games not configured" }, { status: 503 });
+  }
+
   const admin = createAdminClient();
   const { data: profiles, error } = await admin
     .from("profiles")

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import RefreshStatsButton from "@/components/RefreshStatsButton";
+import GamesNotConfigured from "@/components/GamesNotConfigured";
 import type { UserStats } from "@/lib/games/types";
 
 export const metadata: Metadata = {
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function StreakLeaderboard() {
+  if (!isSupabaseConfigured()) return <GamesNotConfigured />;
+
   const supabase = await createClient();
   const {
     data: { user },

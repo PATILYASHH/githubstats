@@ -1,6 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+// True when the Supabase env vars are present. Server pages/routes check this
+// before calling createClient() so a missing config degrades gracefully.
+export function isSupabaseConfigured() {
+  return !!(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 // Server client — reads the session from cookies. Use in Server Components,
 // Route Handlers and Server Actions. Still bound by Row-Level Security.
 export async function createClient() {

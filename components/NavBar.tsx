@@ -21,6 +21,7 @@ export default function NavBar() {
 
   useEffect(() => {
     const supabase = createClient();
+    if (!supabase) return; // Supabase not configured — render nav without auth
 
     supabase.auth.getUser().then(({ data }) => {
       const u = data.user;

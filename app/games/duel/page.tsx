@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import CreateDuelForm from "@/components/CreateDuelForm";
+import GamesNotConfigured from "@/components/GamesNotConfigured";
 import { duelPhase, PHASE_LABEL } from "@/lib/games/duel";
 import { todayUTC } from "@/lib/games/contributions";
 import type { Duel } from "@/lib/games/types";
@@ -15,6 +16,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function DuelHub() {
+  if (!isSupabaseConfigured()) return <GamesNotConfigured />;
+
   const supabase = await createClient();
   const {
     data: { user },

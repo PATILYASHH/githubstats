@@ -31,6 +31,11 @@ export default function CreateDuelForm({
     end.setUTCDate(end.getUTCDate() + days - 1);
 
     const supabase = createClient();
+    if (!supabase) {
+      setLoading(false);
+      alert("Duels aren't configured yet (Supabase env vars missing).");
+      return;
+    }
     const { data, error } = await supabase
       .from("duels")
       .insert({

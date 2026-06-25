@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { refreshUserStats } from "@/lib/games/refresh";
 
 // Let a signed-in user refresh their own stats on demand (so they don't have to
 // wait for the nightly cron to appear on the leaderboard).
 export async function POST() {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ error: "games not configured" }, { status: 503 });
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

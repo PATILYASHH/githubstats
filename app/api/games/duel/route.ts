@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Duel } from "@/lib/games/types";
 
 // Mutate a duel: accept an open invite, or cancel your own duel.
 // Validated against the session, then written with the service-role client.
 export async function POST(request: Request) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ error: "games not configured" }, { status: 503 });
+  }
+
   const { duelId, action } = await request.json().catch(() => ({}));
   if (!duelId || !["accept", "cancel"].includes(action)) {
     return NextResponse.json({ error: "bad request" }, { status: 400 });

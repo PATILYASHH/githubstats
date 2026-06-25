@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import RefreshStatsButton from "@/components/RefreshStatsButton";
+import GamesNotConfigured from "@/components/GamesNotConfigured";
 
 export const metadata: Metadata = {
   title: "Games — compete on GitHub activity",
@@ -42,6 +43,8 @@ const GAMES: GameCard[] = [
 ];
 
 export default async function GamesHub() {
+  if (!isSupabaseConfigured()) return <GamesNotConfigured />;
+
   const supabase = await createClient();
   const {
     data: { user },

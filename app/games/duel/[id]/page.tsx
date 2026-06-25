@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import GamesNotConfigured from "@/components/GamesNotConfigured";
 import { fetchDays, sumInRange, todayUTC } from "@/lib/games/contributions";
 import { duelPhase, PHASE_LABEL } from "@/lib/games/duel";
 import DuelActions from "@/components/DuelActions";
@@ -36,6 +37,8 @@ async function scoreFor(
 }
 
 export default async function DuelDetail({ params }: Props) {
+  if (!isSupabaseConfigured()) return <GamesNotConfigured />;
+
   const { id } = await params;
   const supabase = await createClient();
 

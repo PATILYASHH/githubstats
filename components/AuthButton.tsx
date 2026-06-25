@@ -15,6 +15,11 @@ export default function AuthButton({ user }: { user: SessionUser | null }) {
   async function signIn() {
     setLoading(true);
     const supabase = createClient();
+    if (!supabase) {
+      setLoading(false);
+      alert("Sign-in isn't configured yet (Supabase env vars missing).");
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "github",
       options: { redirectTo: `${window.location.origin}/auth/callback` },
