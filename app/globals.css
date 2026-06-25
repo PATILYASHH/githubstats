@@ -753,11 +753,25 @@ a:hover {
   font-size: 11px;
   color: var(--text-muted);
 }
+.devcard-yearbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+.devcard-scope {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
 .devcard-stats {
   display: flex;
   flex-wrap: wrap;
   gap: 16px 36px;
-  margin: 22px 0;
+  margin: 16px 0 22px;
 }
 .devcard-stat-value {
   font-size: 30px;

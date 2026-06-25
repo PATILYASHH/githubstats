@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import type { GithubStats } from "@/lib/types";
+import { useMemo, useState } from "react";
+import type { ContribDay, GithubStats } from "@/lib/types";
 import ShareCard from "./ShareCard";
 import MiniHeatmap from "./MiniHeatmap";
 import AnimatedNumber from "./AnimatedNumber";
@@ -15,18 +15,52 @@ const THEMES = [
   { id: "sunset", label: "Sunset", className: "theme-sunset" },
 ];
 
+const ALL = "all";
+
+function longestStreakOf(days: ContribDay[]): number {
+  let longest = 0;
+  let run = 0;
+  for (const d of days) {
+    if (d.count > 0) {
+      run++;
+      if (run > longest) longest = run;
+    } else {
+      run = 0;
+    }
+  }
+  return longest;
+}
+
 export default function DevCard({ stats }: { stats: GithubStats }) {
   const { user, contributions: c, rank, funFacts } = stats;
   const [theme, setTheme] = useState(THEMES[0]);
+  const [year, setYear] = useState<string>(ALL);
 
+  const years = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of c.days) set.add(d.date.slice(0, 4));
+    return [...set].sort((a, b) => b.localeCompare(a));
+  }, [c.days]);
+
+  const scoped = useMemo(
+    () => (year === ALL ? c.days : c.days.filter((d) => d.date.startsWith(year))),
+    [c.days, year]
+  );
+
+  const isAll = year === ALL;
+  const contribs = isAll ? c.total : scoped.reduce((a, d) => a + d.count, 0);
+  const activeDays = scoped.filter((d) => d.count > 0).length;
+  const trackedDays = scoped.length;
   const activePct =
-    c.trackedDays > 0 ? Math.round((c.activeDays / c.trackedDays) * 100) : 0;
+    trackedDays > 0 ? Math.round((activeDays / trackedDays) * 100) : 0;
+  const streakVal = isAll ? c.currentStreak : longestStreakOf(scoped);
+  const streakLabel = isAll ? "current streak" : "best streak";
 
   return (
     <ShareCard
       title="Dev Card"
       icon={<GraphIcon />}
-      filename={`${user.login}-devcard`}
+      filename={`${user.login}-devcard${isAll ? "" : `-${year}`}`}
       className={`devcard span-all ${theme.className}`}
     >
       <div className="devcard-top">
@@ -47,16 +81,36 @@ export default function DevCard({ stats }: { stats: GithubStats }) {
         </div>
       </div>
 
+      <div className="devcard-yearbar">
+        <span className="devcard-scope">
+          {isAll ? "All-time stats" : `${year} stats`}
+        </span>
+        <select
+          className="year-select"
+          data-exclude="true"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          aria-label="Select year"
+        >
+          <option value={ALL}>All time</option>
+          {years.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="devcard-stats">
         <Stat
           icon={<GraphIcon />}
-          value={<AnimatedNumber value={c.total} />}
+          value={<AnimatedNumber value={contribs} />}
           label="contributions"
         />
         <Stat
           icon={<FireIcon />}
-          value={<AnimatedNumber value={c.currentStreak} suffix="d" />}
-          label="current streak"
+          value={<AnimatedNumber value={streakVal} suffix="d" />}
+          label={streakLabel}
         />
         <Stat
           icon={<StarIcon />}
@@ -69,7 +123,7 @@ export default function DevCard({ stats }: { stats: GithubStats }) {
         />
       </div>
 
-      <MiniHeatmap days={c.days} />
+      <MiniHeatmap days={scoped} weeks={isAll ? 30 : 53} />
 
       {(funFacts.bestWeekday || funFacts.busiestMonth) && (
         <div className="devcard-facts">
