@@ -40,6 +40,17 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Backfill profiles for any users who signed in before this trigger existed.
+insert into public.profiles (id, github_login, github_id, avatar_url, name)
+select
+  id,
+  raw_user_meta_data ->> 'user_name',
+  nullif(raw_user_meta_data ->> 'provider_id', '')::bigint,
+  raw_user_meta_data ->> 'avatar_url',
+  coalesce(raw_user_meta_data ->> 'full_name', raw_user_meta_data ->> 'name')
+from auth.users
+on conflict (id) do nothing;
+
 -- ---------------------------------------------------------------------------
 -- user_stats: latest snapshot per user, written by the daily cron / refresh.
 -- Login + avatar are denormalized so the leaderboard is a single public read.

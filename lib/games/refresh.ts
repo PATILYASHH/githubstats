@@ -43,6 +43,18 @@ export async function refreshUserStats(input: RefreshInput) {
     };
 
     const admin = createAdminClient();
+    // Self-heal: ensure the profile row exists (it's the FK target for
+    // user_stats) even if the signup trigger never ran for this user.
+    await admin.from("profiles").upsert(
+      {
+        id: input.userId,
+        github_login: input.login,
+        avatar_url: input.avatarUrl ?? null,
+        name: input.name ?? null,
+      },
+      { onConflict: "id" }
+    );
+
     const { error } = await admin
       .from("user_stats")
       .upsert(row, { onConflict: "user_id" });

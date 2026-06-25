@@ -12,13 +12,16 @@ export default function RefreshStatsButton() {
     setState("loading");
     try {
       const res = await fetch("/api/games/refresh", { method: "POST" });
-      if (!res.ok) throw new Error(String(res.status));
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || `Refresh failed (HTTP ${res.status}).`);
+      }
       setState("done");
       router.refresh();
       setTimeout(() => setState("idle"), 2000);
-    } catch {
+    } catch (e) {
       setState("idle");
-      alert("Could not refresh stats. Try again in a moment.");
+      alert(e instanceof Error ? e.message : "Could not refresh stats.");
     }
   }
 

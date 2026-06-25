@@ -8,6 +8,15 @@ export async function POST() {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: "games not configured" }, { status: 503 });
   }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      {
+        error:
+          "Server is missing SUPABASE_SERVICE_ROLE_KEY — set it in Vercel and redeploy.",
+      },
+      { status: 503 }
+    );
+  }
 
   const supabase = await createClient();
   const {
