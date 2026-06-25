@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BIcon } from "./icons";
 
 export default function RefreshStatsButton() {
   const router = useRouter();
@@ -28,11 +29,19 @@ export default function RefreshStatsButton() {
       onClick={refresh}
       disabled={state === "loading"}
     >
-      {state === "loading"
-        ? "Refreshing…"
-        : state === "done"
-        ? "Updated ✓"
-        : "↻ Refresh my stats"}
+      {state === "loading" ? (
+        <>
+          <BIcon name="arrow-clockwise" className="spin" /> Refreshing…
+        </>
+      ) : state === "done" ? (
+        <>
+          <BIcon name="check2" /> Updated
+        </>
+      ) : (
+        <>
+          <BIcon name="arrow-clockwise" /> Refresh my stats
+        </>
+      )}
     </button>
   );
 }

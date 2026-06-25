@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { BIcon } from "./icons";
 
 export default function DuelActions({
   duelId,
@@ -45,7 +46,15 @@ export default function DuelActions({
     <div className="duel-actions">
       {inviteUrl && (
         <button className="btn" onClick={copy}>
-          {copied ? "Copied ✓" : "🔗 Copy invite link"}
+          {copied ? (
+            <>
+              <BIcon name="check2" /> Copied
+            </>
+          ) : (
+            <>
+              <BIcon name="link-45deg" /> Copy invite link
+            </>
+          )}
         </button>
       )}
       {canAccept && (

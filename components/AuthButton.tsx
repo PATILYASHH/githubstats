@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { GithubIcon } from "./icons";
+import { GithubIcon, BIcon } from "./icons";
 
 export interface SessionUser {
   login: string;
@@ -41,7 +41,7 @@ export default function AuthButton({ user }: { user: SessionUser | null }) {
         <span className="auth-login">{user.login}</span>
         <form action="/auth/signout" method="post">
           <button type="submit" className="auth-signout" title="Sign out">
-            Sign out
+            <BIcon name="box-arrow-right" size={14} /> Sign out
           </button>
         </form>
       </div>

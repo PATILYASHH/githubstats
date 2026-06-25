@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { BIcon } from "./icons";
 
 const DURATIONS = [3, 7, 14, 30];
 
@@ -58,7 +59,9 @@ export default function CreateDuelForm({
 
   return (
     <div className="duel-create">
-      <h3>⚔️ Start a new duel</h3>
+      <h3>
+        <BIcon name="lightning-charge-fill" size={18} /> Start a new duel
+      </h3>
       <p>
         Pick a length, then share the invite link with whoever you want to
         challenge. Most contributions over the window wins.

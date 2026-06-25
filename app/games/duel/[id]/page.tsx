@@ -7,6 +7,7 @@ import GamesNotConfigured from "@/components/GamesNotConfigured";
 import { fetchDays, sumInRange, todayUTC } from "@/lib/games/contributions";
 import { duelPhase, PHASE_LABEL } from "@/lib/games/duel";
 import DuelActions from "@/components/DuelActions";
+import { BIcon } from "@/components/icons";
 import type { Duel } from "@/lib/games/types";
 
 export const metadata: Metadata = {
@@ -97,7 +98,9 @@ export default async function DuelDetail({ params }: Props) {
           <Link href="/games/duel" className="back-link">
             ← Duels
           </Link>
-          <h1>⚔️ Duel</h1>
+          <h1>
+            <BIcon name="lightning-charge-fill" size={24} /> Duel
+          </h1>
           <p>
             <span className={`duel-badge ${phase}`}>{PHASE_LABEL[phase]}</span>{" "}
             · {duel.start_date} → {duel.end_date}
@@ -120,9 +123,15 @@ export default async function DuelDetail({ params }: Props) {
         />
       </div>
 
-      {winner === "tie" && <p className="duel-result">It's a tie! 🤝</p>}
+      {winner === "tie" && (
+        <p className="duel-result">
+          <BIcon name="emoji-neutral" /> It&apos;s a tie!
+        </p>
+      )}
       {winner && winner !== "tie" && (
-        <p className="duel-result">🏆 {winner} wins!</p>
+        <p className="duel-result">
+          <BIcon name="trophy-fill" /> {winner} wins!
+        </p>
       )}
       {phase === "pending" && (
         <p className="duel-result muted">

@@ -5,6 +5,7 @@ import CreateDuelForm from "@/components/CreateDuelForm";
 import GamesNotConfigured from "@/components/GamesNotConfigured";
 import { duelPhase, PHASE_LABEL } from "@/lib/games/duel";
 import { todayUTC } from "@/lib/games/contributions";
+import { BIcon } from "@/components/icons";
 import type { Duel } from "@/lib/games/types";
 
 export const metadata: Metadata = {
@@ -31,7 +32,9 @@ export default async function DuelHub() {
             <Link href="/games" className="back-link">
               ← Games
             </Link>
-            <h1>⚔️ 1v1 Duel</h1>
+            <h1>
+            <BIcon name="lightning-charge-fill" size={24} /> 1v1 Duel
+          </h1>
           </div>
         </header>
         <div className="games-empty">
@@ -61,7 +64,9 @@ export default async function DuelHub() {
           <Link href="/games" className="back-link">
             ← Games
           </Link>
-          <h1>⚔️ 1v1 Duel</h1>
+          <h1>
+            <BIcon name="lightning-charge-fill" size={24} /> 1v1 Duel
+          </h1>
           <p>Challenge a friend. Most contributions over the window wins.</p>
         </div>
       </header>

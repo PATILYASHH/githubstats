@@ -4,13 +4,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { GithubIcon } from "./icons";
+import { GithubIcon, BIcon } from "./icons";
 import AuthButton, { type SessionUser } from "./AuthButton";
 
 const LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/games", label: "Games" },
-  { href: "/compare", label: "Compare" },
+  { href: "/", label: "Home", icon: "house-door-fill" },
+  { href: "/games", label: "Games", icon: "controller" },
 ];
 
 export default function NavBar() {
@@ -74,7 +73,7 @@ export default function NavBar() {
             href={l.href}
             className={`nav-link${isActive(l.href) ? " active" : ""}`}
           >
-            {l.label}
+            <BIcon name={l.icon} size={15} /> {l.label}
           </Link>
         ))}
       </div>

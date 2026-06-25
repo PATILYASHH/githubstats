@@ -6,8 +6,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Run on all routes except static assets and image files.
+  // Run on page routes only. Exclude static assets, and crucially /auth and
+  // /api: the OAuth callback exchanges the code and sets the session cookies
+  // itself, so middleware must not run there and race the PKCE verifier cookie.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|auth|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

@@ -1,11 +1,14 @@
 import Link from "next/link";
+import { BIcon } from "./icons";
 
 // Shown on game pages when Supabase env vars aren't set on the deployment yet.
 export default function GamesNotConfigured() {
   return (
     <main className="container">
       <div className="games-empty" style={{ marginTop: 48 }}>
-        <p style={{ fontSize: 18, fontWeight: 600 }}>🎮 Games are being set up</p>
+        <p style={{ fontSize: 18, fontWeight: 600 }}>
+          <BIcon name="controller" size={20} /> Games are being set up
+        </p>
         <p>
           The competition features need a one-time database setup before they go
           live. Check back soon!

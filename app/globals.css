@@ -2104,6 +2104,25 @@ a:hover {
   margin-bottom: 48px;
 }
 
+/* ---- games icons ---- */
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+.fire-ico {
+  color: #ff7b29;
+}
+.game-card-emoji {
+  color: var(--accent);
+  display: flex;
+  align-items: flex-start;
+}
+.nav-link .bi {
+  margin-right: 2px;
+}
+.duel-result .bi {
+  margin-right: 4px;
+}
+
 @media (max-width: 640px) {
   .nav {
     flex-wrap: wrap;

@@ -3,7 +3,10 @@ import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import RefreshStatsButton from "@/components/RefreshStatsButton";
 import GamesNotConfigured from "@/components/GamesNotConfigured";
+import { BIcon } from "@/components/icons";
 import type { UserStats } from "@/lib/games/types";
+
+const MEDAL = ["#e3b341", "#c0c5cc", "#cd7f32"]; // gold, silver, bronze
 
 export const metadata: Metadata = {
   title: "Streak Survivor — GitHub streak leaderboard",
@@ -39,7 +42,9 @@ export default async function StreakLeaderboard() {
           <Link href="/games" className="back-link">
             ← Games
           </Link>
-          <h1>🔥 Streak Survivor</h1>
+          <h1>
+            <BIcon name="fire" size={26} /> Streak Survivor
+          </h1>
           <p>Ranked by current streak, then longest streak.</p>
         </div>
         {user && <RefreshStatsButton />}
@@ -65,8 +70,11 @@ export default async function StreakLeaderboard() {
                 i < 3 ? " top" : ""
               }`}
             >
-              <span className="lb-rank">
-                {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
+              <span
+                className="lb-rank"
+                style={i < 3 ? { color: MEDAL[i] } : undefined}
+              >
+                {i < 3 ? <BIcon name="trophy-fill" size={18} /> : i + 1}
               </span>
               <Link href={`/${s.github_login}`} className="lb-user">
                 {s.avatar_url && (
@@ -75,7 +83,10 @@ export default async function StreakLeaderboard() {
                 )}
                 <span>{s.github_login}</span>
               </Link>
-              <span className="lb-num lb-streak">{s.streak_current}🔥</span>
+              <span className="lb-num lb-streak">
+                {s.streak_current}{" "}
+                <BIcon name="fire" size={14} className="fire-ico" />
+              </span>
               <span className="lb-num">{s.streak_longest}</span>
               <span className="lb-num">
                 {s.contributions_total.toLocaleString("en-US")}
