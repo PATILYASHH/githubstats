@@ -32,8 +32,8 @@ export default function PlotCity({ layout }: { layout: Layout }) {
     scene.background = new THREE.Color("#8ec5ff"); // daytime sky
     sceneRef.current = scene;
 
-    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 200);
-    camera.position.set(PLOT_SIZE, PLOT_SIZE * 1.1, PLOT_SIZE * 1.5);
+    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 400);
+    camera.position.set(0, PLOT_SIZE * 0.85, PLOT_SIZE * 1.15);
 
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -42,9 +42,9 @@ export default function PlotCity({ layout }: { layout: Layout }) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.maxPolarAngle = Math.PI / 2.15;
-    controls.minDistance = 4;
-    controls.maxDistance = 38;
-    controls.target.set(0, 0.5, 0);
+    controls.minDistance = 10;
+    controls.maxDistance = 170;
+    controls.target.set(0, 2, 0);
 
     scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x3a5a32, 0.95));
     scene.add(new THREE.AmbientLight(0xffffff, 0.35));
@@ -53,7 +53,7 @@ export default function PlotCity({ layout }: { layout: Layout }) {
     scene.add(sun);
 
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(60, 60),
+      new THREE.PlaneGeometry(PLOT_SIZE * 2.2, PLOT_SIZE * 2.2),
       new THREE.MeshStandardMaterial({ color: "#3f6336", flatShading: true })
     );
     ground.rotation.x = -Math.PI / 2;

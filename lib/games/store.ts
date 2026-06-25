@@ -1,7 +1,7 @@
 // Git City store + plot model — Minecraft-style building blocks.
 // Pure data + helpers, safe on client and server.
 
-export const PLOT_SIZE = 8; // 8x8 buildable tiles per user
+export const PLOT_SIZE = 50; // 50x50 buildable blocks per user
 
 export interface StoreItem {
   id: string;

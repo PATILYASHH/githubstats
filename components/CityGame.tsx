@@ -4,7 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
 import { buildPlotGroup, disposeGroup } from "@/lib/plot3d";
-import { STORE, PLOT_SIZE, layoutCost, type Layout } from "@/lib/games/store";
+import {
+  STORE,
+  STORE_MAP,
+  PLOT_SIZE,
+  layoutCost,
+  type Layout,
+} from "@/lib/games/store";
 import { BIcon } from "./icons";
 
 export interface GamePlot {
@@ -48,20 +54,35 @@ export default function CityGame({
   const mountRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   const [locked, setLocked] = useState(false);
-  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [mode, setMode] = useState<"explore" | "edit">("explore");
+  const [hotbar, setHotbar] = useState<string[]>(
+    STORE.slice(0, 9).map((i) => i.id)
+  );
+  const [activeSlot, setActiveSlot] = useState(0);
+  const [bagOpen, setBagOpen] = useState(false);
   const [balance, setBalance] = useState(budget);
   const [saving, setSaving] = useState<"idle" | "saving" | "saved">("idle");
   const [msg, setMsg] = useState<string | null>(null);
 
   // refs the imperative game loop / handlers read
-  const selRef = useRef(0);
-  const layoutRef = useRef<Layout>(
-    plots.find((p) => p.mine)?.layout ?? []
-  );
+  const modeRef = useRef<"explore" | "edit">("explore");
+  const bagRef = useRef(false);
+  const hotbarRef = useRef(hotbar);
+  const activeRef = useRef(0);
+  const layoutRef = useRef<Layout>(plots.find((p) => p.mine)?.layout ?? []);
 
   useEffect(() => {
-    selRef.current = selectedIdx;
-  }, [selectedIdx]);
+    modeRef.current = mode;
+  }, [mode]);
+  useEffect(() => {
+    bagRef.current = bagOpen;
+  }, [bagOpen]);
+  useEffect(() => {
+    hotbarRef.current = hotbar;
+  }, [hotbar]);
+  useEffect(() => {
+    activeRef.current = activeSlot;
+  }, [activeSlot]);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -69,6 +90,7 @@ export default function CityGame({
 
     let alive = true;
     layoutRef.current = plots.find((p) => p.mine)?.layout ?? [];
+    setBalance(budget - layoutCost(layoutRef.current));
 
     let renderer: THREE.WebGLRenderer;
     try {
@@ -94,10 +116,10 @@ export default function CityGame({
     const h = mount.clientHeight || 540;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#8ec5ff");
-    scene.fog = new THREE.Fog("#8ec5ff", 60, 240);
+    scene.fog = new THREE.Fog("#8ec5ff", 120, 560);
 
-    const camera = new THREE.PerspectiveCamera(72, w / h, 0.1, 600);
-    camera.position.set(myOrigin.x, 1.7, myOrigin.z + PLOT_SIZE / 2 + 3);
+    const camera = new THREE.PerspectiveCamera(72, w / h, 0.1, 1200);
+    camera.position.set(myOrigin.x, 1.7, myOrigin.z + PLOT_SIZE / 2 + 8);
     camera.lookAt(myOrigin.x, 1.5, myOrigin.z);
 
     renderer.setSize(w, h);
@@ -120,29 +142,91 @@ export default function CityGame({
     scene.add(ground);
     const grid = new THREE.GridHelper(
       Math.max(groundW, groundD),
-      Math.round(Math.max(groundW, groundD) / 2),
+      Math.round(Math.max(groundW, groundD) / 4),
       0x8a8a8a,
       0x5f5f5f
     );
     grid.position.y = 0.02;
     scene.add(grid);
 
-    // plots
+    // shared decor (footpaths + street lamps)
+    const decor: THREE.Object3D[] = [];
+    const footGeo = new THREE.BoxGeometry(PLOT_SIZE + 6, 0.3, PLOT_SIZE + 6);
+    const footMat = new THREE.MeshStandardMaterial({
+      color: "#b6b6b6",
+      flatShading: true,
+    });
+    const postGeo = new THREE.BoxGeometry(0.4, 4, 0.4);
+    const postMat = new THREE.MeshStandardMaterial({ color: "#2b2b2b" });
+    const bulbGeo = new THREE.BoxGeometry(0.9, 0.7, 0.9);
+    const bulbMat = new THREE.MeshStandardMaterial({
+      color: "#ffe08a",
+      emissive: "#ffcf5a",
+      emissiveIntensity: 0.9,
+    });
+    function addLamp(x: number, z: number) {
+      const lamp = new THREE.Group();
+      const post = new THREE.Mesh(postGeo, postMat);
+      post.position.y = 2;
+      const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+      bulb.position.y = 4.2;
+      lamp.add(post, bulb);
+      lamp.position.set(x, 0, z);
+      scene.add(lamp);
+      decor.push(lamp);
+    }
+
+    // plots: footpath + grass + four street lamps + name label
     const otherGroups: THREE.Object3D[] = [];
     const sprites: THREE.Sprite[] = [];
     let myGroup: THREE.Group | null = null;
+    const half = PLOT_SIZE / 2;
     list.forEach((p, k) => {
       const o = originOf(k);
+
+      const foot = new THREE.Mesh(footGeo, footMat);
+      foot.position.set(o.x, -0.2, o.z);
+      scene.add(foot);
+      decor.push(foot);
+
       const g = buildPlotGroup(THREE, p.layout, p.mine ? "#3f7a36" : "#4a6a3a");
       g.position.set(o.x, 0, o.z);
       scene.add(g);
       if (p.mine) myGroup = g;
       else otherGroups.push(g);
+
+      addLamp(o.x - half - 2, o.z - half - 2);
+      addLamp(o.x + half + 2, o.z - half - 2);
+      addLamp(o.x - half - 2, o.z + half + 2);
+      addLamp(o.x + half + 2, o.z + half + 2);
+
       const label = makeLabel(p.login, p.mine);
-      label.position.set(o.x, 5, o.z);
+      label.position.set(o.x, 9, o.z);
       scene.add(label);
       sprites.push(label);
     });
+
+    // boundary walls — the edge of the world, you can't walk past them
+    const walls: THREE.Object3D[] = [];
+    const wallH = 4;
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: "#8a6f4a",
+      flatShading: true,
+    });
+    const wx = groundW / 2;
+    const wz = groundD / 2;
+    const wallSpecs: [number, number, number, number, number, number][] = [
+      [groundW + 2, wallH, 1, 0, wallH / 2, -wz],
+      [groundW + 2, wallH, 1, 0, wallH / 2, wz],
+      [1, wallH, groundD + 2, -wx, wallH / 2, 0],
+      [1, wallH, groundD + 2, wx, wallH / 2, 0],
+    ];
+    for (const [gw, gh, gd, px, py, pz] of wallSpecs) {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, gd), wallMat);
+      wall.position.set(px, py, pz);
+      scene.add(wall);
+      walls.push(wall);
+    }
 
     // interaction plane over my plot + highlight box
     const interact = new THREE.Mesh(
@@ -219,10 +303,12 @@ export default function CityGame({
     renderer.domElement.addEventListener("click", onClickCanvas);
 
     function place() {
-      if (!canBuild || !target) return;
+      if (!canBuild || modeRef.current !== "edit" || bagRef.current || !target)
+        return;
       const key = `${target.x},${target.z}`;
       if (layoutRef.current.some((p) => `${p.x},${p.z}` === key)) return;
-      const item = STORE[selRef.current];
+      const item = STORE_MAP[hotbarRef.current[activeRef.current]];
+      if (!item) return;
       const bal = budget - layoutCost(layoutRef.current);
       if (bal < item.price) {
         flash(`Not enough coins for ${item.name}`);
@@ -236,7 +322,8 @@ export default function CityGame({
       scheduleSave();
     }
     function remove() {
-      if (!canBuild || !target) return;
+      if (!canBuild || modeRef.current !== "edit" || bagRef.current || !target)
+        return;
       const key = `${target.x},${target.z}`;
       if (!layoutRef.current.some((p) => `${p.x},${p.z}` === key)) return;
       layoutRef.current = layoutRef.current.filter(
@@ -256,25 +343,40 @@ export default function CityGame({
     renderer.domElement.addEventListener("contextmenu", onContext);
 
     const onWheel = (e: WheelEvent) => {
-      if (!controls.isLocked) return;
+      if (!controls.isLocked || modeRef.current !== "edit" || bagRef.current)
+        return;
       const dir = e.deltaY > 0 ? 1 : -1;
-      setSelectedIdx((i) => (i + dir + STORE.length) % STORE.length);
+      setActiveSlot((i) => (i + dir + 9) % 9);
     };
     renderer.domElement.addEventListener("wheel", onWheel, { passive: true });
 
     const keys: Record<string, boolean> = {};
     const onKeyDown = (e: KeyboardEvent) => {
       keys[e.code] = true;
-      if (e.code.startsWith("Digit")) {
+      if (e.code === "KeyB" && canBuild) {
+        setBagOpen(false);
+        setMode((m) => (m === "edit" ? "explore" : "edit"));
+      } else if (e.code === "KeyE" && canBuild && modeRef.current === "edit") {
+        setBagOpen((b) => {
+          if (!b) controls.unlock();
+          else controls.lock();
+          return !b;
+        });
+      } else if (
+        e.code.startsWith("Digit") &&
+        modeRef.current === "edit" &&
+        !bagRef.current
+      ) {
         const n = parseInt(e.code.slice(5), 10);
-        if (n >= 1 && n <= 9 && n <= STORE.length) setSelectedIdx(n - 1);
+        if (n >= 1 && n <= 9) setActiveSlot(n - 1);
       }
     };
     const onKeyUp = (e: KeyboardEvent) => (keys[e.code] = false);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
-    const bound = Math.max(groundW, groundD) / 2;
+    const limX = groundW / 2 - 1.5; // stop just before the walls
+    const limZ = groundD / 2 - 1.5;
     let prev = performance.now();
     let raf = 0;
     const animate = () => {
@@ -288,14 +390,14 @@ export default function CityGame({
         if (keys["KeyA"] || keys["ArrowLeft"]) controls.moveRight(-sp);
         if (keys["KeyD"] || keys["ArrowRight"]) controls.moveRight(sp);
         camera.position.y = 1.7;
-        camera.position.x = Math.max(-bound, Math.min(bound, camera.position.x));
-        camera.position.z = Math.max(-bound, Math.min(bound, camera.position.z));
+        camera.position.x = Math.max(-limX, Math.min(limX, camera.position.x));
+        camera.position.z = Math.max(-limZ, Math.min(limZ, camera.position.z));
       }
 
-      // target tile under crosshair (on my plot)
+      // target tile under crosshair (edit mode, on my plot)
       target = null;
       hl.visible = false;
-      if (canBuild) {
+      if (canBuild && modeRef.current === "edit" && !bagRef.current) {
         raycaster.setFromCamera(centre, camera);
         const hit = raycaster.intersectObject(interact)[0];
         if (hit) {
@@ -346,6 +448,8 @@ export default function CityGame({
       controls.dispose();
       if (myGroup) disposeGroup(myGroup);
       otherGroups.forEach(disposeGroup);
+      decor.forEach(disposeGroup);
+      walls.forEach(disposeGroup);
       sprites.forEach((s) => {
         s.material.map?.dispose();
         s.material.dispose();
@@ -372,67 +476,144 @@ export default function CityGame({
     );
   }
 
-  const sel = STORE[selectedIdx];
+  const activeItem = STORE_MAP[hotbar[activeSlot]];
 
   return (
     <div className="city-game">
       <div ref={mountRef} className="gitcity-canvas" />
 
-      {/* HUD */}
+      {/* top HUD */}
       <div className="hud-top">
-        <span className="hud-coins">
-          <BIcon name="coin" size={16} /> {balance.toLocaleString("en-US")}
-        </span>
-        {canBuild && saving !== "idle" && (
+        {mode === "edit" && (
+          <span className="hud-coins">
+            <BIcon name="coin" size={16} /> {balance.toLocaleString("en-US")}
+          </span>
+        )}
+        {mode === "edit" && saving !== "idle" && (
           <span className="hud-save">
             {saving === "saving" ? "Saving…" : "Saved ✓"}
           </span>
         )}
       </div>
 
+      {canBuild && (
+        <button
+          className={`mode-toggle ${mode}`}
+          onClick={() => {
+            setBagOpen(false);
+            setMode((m) => (m === "edit" ? "explore" : "edit"));
+          }}
+        >
+          <BIcon name={mode === "edit" ? "hammer" : "compass"} size={14} />{" "}
+          {mode === "edit" ? "Editing" : "Exploring"} · B
+        </button>
+      )}
+
       {locked && <div className="hud-crosshair" />}
       {msg && <div className="hud-msg">{msg}</div>}
 
-      {!locked && (
+      {!locked && !bagOpen && (
         <div className="city-world-overlay">
           <p>
             <strong>Click to play</strong>
           </p>
-          {canBuild ? (
+          {mode === "edit" ? (
             <p>
-              WASD walk · mouse look · <b>left-click</b> build · <b>right-click</b>{" "}
-              remove · scroll/1-9 pick block · Esc release
+              WASD walk · <b>left-click</b> build · <b>right-click</b> remove ·
+              scroll/1-9 hotbar · <b>E</b> bag · <b>B</b> explore · Esc release
             </p>
           ) : (
-            <p>WASD walk · mouse look · Esc release</p>
+            <p>
+              WASD walk · mouse look ·{" "}
+              {canBuild && (
+                <>
+                  <b>B</b> to build ·{" "}
+                </>
+              )}
+              Esc release
+            </p>
           )}
         </div>
       )}
 
-      {canBuild && (
-        <div className="hotbar">
-          {STORE.map((it, i) => {
-            const poor = balance < it.price;
-            return (
-              <button
-                key={it.id}
-                className={`hotbar-slot${i === selectedIdx ? " sel" : ""}${
-                  poor ? " poor" : ""
-                }`}
-                onClick={() => setSelectedIdx(i)}
-                title={`${it.name} — ${it.price}`}
-                style={{ color: it.color }}
-              >
-                <BIcon name={it.icon} size={18} />
-              </button>
-            );
-          })}
-        </div>
+      {/* hotbar (edit mode) */}
+      {canBuild && mode === "edit" && (
+        <>
+          <div className="hotbar">
+            {hotbar.map((id, i) => {
+              const it = STORE_MAP[id];
+              const poor = !it || balance < it.price;
+              return (
+                <button
+                  key={i}
+                  className={`hotbar-slot${i === activeSlot ? " sel" : ""}${
+                    poor ? " poor" : ""
+                  }`}
+                  onClick={() => setActiveSlot(i)}
+                  title={it ? `${it.name} — ${it.price}` : "empty"}
+                  style={it ? { color: it.color } : undefined}
+                >
+                  {it && <BIcon name={it.icon} size={18} />}
+                  <span className="hotbar-num">{i + 1}</span>
+                </button>
+              );
+            })}
+            <button
+              className="hotbar-bag"
+              onClick={() => setBagOpen(true)}
+              title="Open bag (E)"
+            >
+              <BIcon name="backpack2-fill" size={18} />
+            </button>
+          </div>
+          {activeItem && (
+            <div className="hotbar-label">
+              {activeItem.name} · <BIcon name="coin" size={12} />{" "}
+              {activeItem.price}
+            </div>
+          )}
+        </>
       )}
 
-      {canBuild && (
-        <div className="hotbar-label">
-          {sel.name} · <BIcon name="coin" size={12} /> {sel.price}
+      {/* bag / full inventory */}
+      {bagOpen && (
+        <div className="bag" onClick={() => setBagOpen(false)}>
+          <div className="bag-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="bag-head">
+              <strong>
+                <BIcon name="backpack2-fill" size={16} /> Inventory
+              </strong>
+              <span>Click an item to put it in slot {activeSlot + 1}</span>
+              <button className="bag-close" onClick={() => setBagOpen(false)}>
+                <BIcon name="x-lg" size={16} />
+              </button>
+            </div>
+            <div className="bag-grid">
+              {STORE.map((it) => (
+                <button
+                  key={it.id}
+                  className={`bag-item${balance < it.price ? " poor" : ""}`}
+                  onClick={() => {
+                    setHotbar((hb) => {
+                      const n = [...hb];
+                      n[activeSlot] = it.id;
+                      return n;
+                    });
+                    setBagOpen(false);
+                  }}
+                  title={`${it.name} — ${it.price}`}
+                >
+                  <span className="bag-ico" style={{ color: it.color }}>
+                    <BIcon name={it.icon} size={20} />
+                  </span>
+                  <span className="bag-name">{it.name}</span>
+                  <span className="bag-price">
+                    <BIcon name="coin" size={11} /> {it.price}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
