@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
-import { buildPlotGroup, disposeGroup } from "@/lib/plot3d";
+import {
+  buildPlotGroup,
+  disposeGroup,
+  disposeGeometriesOnly,
+} from "@/lib/plot3d";
 import {
   STORE,
   STORE_MAP,
@@ -124,6 +128,8 @@ export default function CityGame({
 
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
     mount.appendChild(renderer.domElement);
 
     scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x4a5a3a, 0.95));
@@ -228,6 +234,40 @@ export default function CityGame({
       walls.push(wall);
     }
 
+    // road centre-line markings down the two main avenues
+    const lineMat = new THREE.MeshStandardMaterial({ color: "#e6c84a", roughness: 1 });
+    const lineGeoX = new THREE.BoxGeometry(2, 0.06, 0.4);
+    const lineGeoZ = new THREE.BoxGeometry(0.4, 0.06, 2);
+    for (let x = -groundW / 2 + 2; x < groundW / 2; x += 4) {
+      const d = new THREE.Mesh(lineGeoX, lineMat);
+      d.position.set(x, 0.05, 0);
+      scene.add(d);
+      decor.push(d);
+    }
+    for (let z = -groundD / 2 + 2; z < groundD / 2; z += 4) {
+      const d = new THREE.Mesh(lineGeoZ, lineMat);
+      d.position.set(0, 0.05, z);
+      scene.add(d);
+      decor.push(d);
+    }
+
+    // drifting block clouds
+    const cloudMat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 1 });
+    const cloudGeo = new THREE.BoxGeometry(8, 2, 6);
+    const clouds = new THREE.Group();
+    const cloudSpan = Math.max(groundW, groundD) + 100;
+    for (let i = 0; i < 16; i++) {
+      const cl = new THREE.Mesh(cloudGeo, cloudMat);
+      cl.position.set(
+        ((i * 37) % cloudSpan) - cloudSpan / 2,
+        42 + (i % 3) * 5,
+        ((i * 53) % cloudSpan) - cloudSpan / 2
+      );
+      cl.scale.set(0.7 + (i % 4) * 0.5, 1, 0.7 + (i % 3) * 0.6);
+      clouds.add(cl);
+    }
+    scene.add(clouds);
+
     // interaction plane over my plot + highlight box
     const interact = new THREE.Mesh(
       new THREE.PlaneGeometry(PLOT_SIZE, PLOT_SIZE),
@@ -253,7 +293,7 @@ export default function CityGame({
     function rebuildMine() {
       if (myGroup) {
         scene.remove(myGroup);
-        disposeGroup(myGroup);
+        disposeGeometriesOnly(myGroup);
       }
       myGroup = buildPlotGroup(THREE, layoutRef.current, "#3f7a36");
       myGroup.position.set(myOrigin.x, 0, myOrigin.z);
@@ -263,7 +303,9 @@ export default function CityGame({
 
     let saveTimer: ReturnType<typeof setTimeout> | null = null;
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    let dirty = false; // unsaved changes pending
     function scheduleSave() {
+      dirty = true;
       if (saveTimer) clearTimeout(saveTimer);
       setSaving("saving");
       saveTimer = setTimeout(async () => {
@@ -273,8 +315,9 @@ export default function CityGame({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ layout: layoutRef.current }),
           });
-          if (!alive) return;
           if (!res.ok) throw new Error();
+          dirty = false; // only clear after a confirmed save
+          if (!alive) return;
           setSaving("saved");
           idleTimer = setTimeout(() => {
             if (alive) setSaving("idle");
@@ -415,6 +458,9 @@ export default function CityGame({
         }
       }
 
+      clouds.position.x += 1.4 * dt;
+      if (clouds.position.x > 60) clouds.position.x -= 120;
+
       renderer.render(scene, camera);
       raf = requestAnimationFrame(animate);
     };
@@ -433,6 +479,19 @@ export default function CityGame({
     return () => {
       alive = false;
       cancelAnimationFrame(raf);
+      // Flush any unsaved build so changes can't be lost on navigation.
+      if (dirty) {
+        try {
+          fetch("/api/games/plot", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ layout: layoutRef.current }),
+            keepalive: true,
+          });
+        } catch {
+          /* best effort */
+        }
+      }
       if (saveTimer) clearTimeout(saveTimer);
       if (idleTimer) clearTimeout(idleTimer);
       if (msgTimer) clearTimeout(msgTimer);
@@ -446,10 +505,11 @@ export default function CityGame({
       controls.removeEventListener("lock", onLock);
       controls.removeEventListener("unlock", onUnlock);
       controls.dispose();
-      if (myGroup) disposeGroup(myGroup);
-      otherGroups.forEach(disposeGroup);
+      if (myGroup) disposeGeometriesOnly(myGroup);
+      otherGroups.forEach(disposeGeometriesOnly);
       decor.forEach(disposeGroup);
       walls.forEach(disposeGroup);
+      disposeGroup(clouds);
       sprites.forEach((s) => {
         s.material.map?.dispose();
         s.material.dispose();

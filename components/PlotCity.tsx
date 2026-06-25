@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { buildPlotGroup, disposeGroup } from "@/lib/plot3d";
+import {
+  buildPlotGroup,
+  disposeGroup,
+  disposeGeometriesOnly,
+} from "@/lib/plot3d";
 import { PLOT_SIZE, type Layout } from "@/lib/games/store";
 
 // Orbit view of a single plot. Scene is set up once; only the plot group is
@@ -37,6 +41,8 @@ export default function PlotCity({ layout }: { layout: Layout }) {
 
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
     mount.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -106,7 +112,7 @@ export default function PlotCity({ layout }: { layout: Layout }) {
     plotRef.current = plot;
     return () => {
       scene.remove(plot);
-      disposeGroup(plot);
+      disposeGeometriesOnly(plot);
       if (plotRef.current === plot) plotRef.current = null;
     };
   }, [layout]);
