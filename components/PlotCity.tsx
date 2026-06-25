@@ -29,7 +29,7 @@ export default function PlotCity({ layout }: { layout: Layout }) {
     const w = mount.clientWidth || 800;
     const h = mount.clientHeight || 460;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#0a0e14");
+    scene.background = new THREE.Color("#8ec5ff"); // daytime sky
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 200);
@@ -46,21 +46,22 @@ export default function PlotCity({ layout }: { layout: Layout }) {
     controls.maxDistance = 38;
     controls.target.set(0, 0.5, 0);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x3a5a32, 0.95));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
     const sun = new THREE.DirectionalLight(0xffffff, 0.9);
     sun.position.set(8, 16, 6);
     scene.add(sun);
 
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(40, 40),
-      new THREE.MeshStandardMaterial({ color: "#0d1117" })
+      new THREE.PlaneGeometry(60, 60),
+      new THREE.MeshStandardMaterial({ color: "#3f6336", flatShading: true })
     );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.31;
+    ground.position.y = -1.01;
     scene.add(ground);
 
-    const grid = new THREE.GridHelper(PLOT_SIZE, PLOT_SIZE, 0x30363d, 0x1b2129);
-    grid.position.y = 0.01;
+    const grid = new THREE.GridHelper(PLOT_SIZE, PLOT_SIZE, 0x2c4a26, 0x35562d);
+    grid.position.y = 0.02;
     scene.add(grid);
 
     let raf = 0;
@@ -88,6 +89,7 @@ export default function PlotCity({ layout }: { layout: Layout }) {
       disposeGroup(ground);
       grid.dispose();
       renderer.dispose();
+      renderer.forceContextLoss();
       sceneRef.current = null;
       if (renderer.domElement.parentNode === mount) {
         mount.removeChild(renderer.domElement);

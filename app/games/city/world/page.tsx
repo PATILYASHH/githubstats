@@ -51,7 +51,26 @@ export default async function CityWorldPage() {
           </p>
         </div>
       ) : (
-        <CityWorldClient plots={plots} />
+        <>
+          <CityWorldClient plots={plots} />
+          <div className="city-directory">
+            <h3>
+              <BIcon name="buildings-fill" size={16} /> {plots.length} cities
+            </h3>
+            <div className="city-directory-list">
+              {plots.map((p) => (
+                <Link
+                  key={p.login}
+                  href={`/games/city/${encodeURIComponent(p.login)}`}
+                  className="city-chip"
+                >
+                  {p.login}
+                  <span className="city-chip-count">{p.layout.length}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </main>
   );

@@ -2469,3 +2469,41 @@ a:hover {
     max-height: 200px;
   }
 }
+
+/* ---- Git City: world directory ---- */
+.city-directory {
+  margin: 16px 0 48px;
+}
+.city-directory h3 {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.city-directory-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.city-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 8px 6px 14px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+}
+.city-chip:hover {
+  text-decoration: none;
+  border-color: var(--accent);
+}
+.city-chip-count {
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}

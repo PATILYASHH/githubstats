@@ -64,8 +64,8 @@ export default function CityWorld({ plots }: { plots: CityPlot[] }) {
     const w = mount.clientWidth || 800;
     const h = mount.clientHeight || 520;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#0a0e14");
-    scene.fog = new THREE.Fog("#0a0e14", 30, 140);
+    scene.background = new THREE.Color("#8ec5ff"); // daytime sky
+    scene.fog = new THREE.Fog("#8ec5ff", 50, 220);
 
     const camera = new THREE.PerspectiveCamera(70, w / h, 0.1, 600);
     camera.position.set(0, 1.7, spanZ / 2 + PITCH);
@@ -75,25 +75,26 @@ export default function CityWorld({ plots }: { plots: CityPlot[] }) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mount.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+    scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x4a5a3a, 0.95));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.9);
     sun.position.set(40, 60, 20);
     scene.add(sun);
 
-    // asphalt ground (the roads) covering the whole city
+    // stone road ground covering the whole city (plots sit on top as grass)
     const groundW = spanX + PITCH * 2;
     const groundD = spanZ + PITCH * 2;
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(groundW, groundD),
-      new THREE.MeshStandardMaterial({ color: "#11151c", roughness: 1 })
+      new THREE.MeshStandardMaterial({ color: "#707070", roughness: 1, flatShading: true })
     );
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
     const grid = new THREE.GridHelper(
       Math.max(groundW, groundD),
       Math.round(Math.max(groundW, groundD) / 2),
-      0x2d3340,
-      0x191e26
+      0x8a8a8a,
+      0x5f5f5f
     );
     grid.position.y = 0.02;
     scene.add(grid);
@@ -180,6 +181,7 @@ export default function CityWorld({ plots }: { plots: CityPlot[] }) {
       disposeGroup(ground);
       grid.dispose();
       renderer.dispose();
+      renderer.forceContextLoss();
       if (renderer.domElement.parentNode === mount) {
         mount.removeChild(renderer.domElement);
       }
