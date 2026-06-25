@@ -1,73 +1,63 @@
-"use client";
-
-import { useState, type FormEvent } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { GithubIcon } from "@/components/icons";
+import { getGithubStats, GithubError } from "@/lib/github";
+import Dashboard from "@/components/Dashboard";
+import { DEFAULT_USER } from "@/lib/config";
 
-const EXAMPLES = ["torvalds", "PATILYASHH", "gaearon", "sindresorhus"];
+const description = `${DEFAULT_USER}'s GitHub contributions, streaks, dev rank, top languages and more. Search any other developer from the top bar.`;
 
-export default function Home() {
-  const router = useRouter();
-  const [username, setUsername] = useState("");
+export const metadata: Metadata = {
+  title: `${DEFAULT_USER}'s GitHub stats`,
+  description,
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: `${DEFAULT_USER}'s GitHub stats`,
+    description,
+    url: "/",
+    type: "profile",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${DEFAULT_USER}'s GitHub stats`,
+    description,
+  },
+};
 
-  function go(name: string) {
-    const clean = name.trim().replace(/^@/, "");
-    if (clean) router.push(`/${encodeURIComponent(clean)}`);
-  }
+// Render on demand (like /[username]) so we never prerender stale stats.
+export const dynamic = "force-dynamic";
 
-  function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    go(username);
+const EXAMPLES = ["torvalds", "gaearon", "sindresorhus"];
+
+export default async function Home() {
+  let stats = null;
+  let error: string | null = null;
+  try {
+    stats = await getGithubStats(DEFAULT_USER);
+  } catch (err) {
+    error = err instanceof GithubError ? err.message : "Something went wrong.";
   }
 
   return (
     <>
-      <header className="hero">
-        <div className="hero-mark">
-          <GithubIcon /> open source · githubstatss.vercel.app
-        </div>
-        <h1>
-          Showcase your <span className="grad">GitHub</span> story
-        </h1>
-        <p>
-          Enter a GitHub username to reveal contributions, streaks, your dev
-          rank, top languages and more — then share any card as an image.
-        </p>
-
-        <form className="search" onSubmit={onSubmit}>
-          <input
-            type="text"
-            placeholder="GitHub username, e.g. torvalds"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            aria-label="GitHub username"
-          />
-          <button className="btn" type="submit">
-            Get stats
-          </button>
-        </form>
-
-        <div className="examples">
-          Try:{" "}
-          {EXAMPLES.map((ex, i) => (
-            <span key={ex}>
-              <button type="button" onClick={() => go(ex)}>
-                {ex}
-              </button>
-              {i < EXAMPLES.length - 1 ? " · " : ""}
-            </span>
-          ))}
-        </div>
-
-        <div className="hero-links">
-          <Link href="/compare">⚔️ Compare two developers →</Link>
-        </div>
-      </header>
-
+      <main className="container">
+        {error ? (
+          <div className="page-error">
+            <div className="page-error-emoji">⚠️</div>
+            <h2>{error}</h2>
+            <p>Try another developer — search in the top bar, or pick one:</p>
+            <div className="examples">
+              {EXAMPLES.map((ex, i) => (
+                <span key={ex}>
+                  <Link href={`/${ex}`}>{ex}</Link>
+                  {i < EXAMPLES.length - 1 ? " · " : ""}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          stats && <Dashboard stats={stats} />
+        )}
+      </main>
       <footer className="footer">
         <p>
           Built with Next.js · Open source on{" "}
@@ -77,8 +67,9 @@ export default function Home() {
             rel="noreferrer"
           >
             GitHub
-          </a>
-          . No login required.
+          </a>{" "}
+          · <Link href="/compare">Compare developers</Link> ·{" "}
+          <Link href="/games">Games</Link>
         </p>
       </footer>
     </>

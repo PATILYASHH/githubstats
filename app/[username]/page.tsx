@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    alternates: { canonical: `/${handle}` },
     openGraph: {
       title,
       description,
@@ -51,7 +52,7 @@ export default async function UserPage({ params }: Props) {
             <h2>{error}</h2>
             <p>Double-check the username and try again.</p>
             <Link href="/" className="btn">
-              ← Back to search
+              ← Back home
             </Link>
           </div>
         ) : (

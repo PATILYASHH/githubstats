@@ -48,61 +48,14 @@ a:hover {
   padding: 0 16px 80px;
 }
 
-/* ---------- Header / hero ---------- */
-.hero {
-  text-align: center;
-  padding: 64px 16px 40px;
-}
-.hero-mark {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 6px 14px;
-  margin-bottom: 22px;
-}
-.hero h1 {
-  font-size: clamp(28px, 6vw, 44px);
-  margin: 0 0 12px;
-  letter-spacing: -0.02em;
-}
-.hero h1 .grad {
+/* gradient text accent — home & games hero titles */
+.grad {
   background: linear-gradient(90deg, #39d353, #2f81f7);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.hero p {
-  color: var(--text-muted);
-  font-size: 17px;
-  max-width: 620px;
-  margin: 0 auto;
-}
 
-/* ---------- Search form ---------- */
-.search {
-  display: flex;
-  gap: 10px;
-  max-width: 480px;
-  margin: 30px auto 0;
-}
-.search input {
-  flex: 1;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 16px;
-  padding: 12px 14px;
-  outline: none;
-}
-.search input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(47, 129, 247, 0.3);
-}
 .btn {
   background: #238636;
   color: #fff;
@@ -127,6 +80,7 @@ a:hover {
   color: var(--text-muted);
   font-size: 14px;
 }
+.examples a,
 .examples button {
   background: none;
   border: none;
@@ -135,6 +89,7 @@ a:hover {
   font-size: 14px;
   padding: 0 4px;
 }
+.examples a:hover,
 .examples button:hover {
   text-decoration: underline;
 }
@@ -659,13 +614,6 @@ a:hover {
 .topbar-link:hover {
   color: var(--text);
   text-decoration: none;
-}
-
-.hero-links {
-  margin-top: 26px;
-}
-.hero-links a {
-  font-weight: 600;
 }
 
 /* ---------- page error ---------- */

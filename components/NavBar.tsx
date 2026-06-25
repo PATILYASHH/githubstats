@@ -84,7 +84,7 @@ export default function NavBar() {
           type="text"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search a username…"
+          placeholder="Search a username, then ↵"
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
