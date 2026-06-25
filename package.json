@@ -31,6 +31,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.2",
     "bootstrap-icons": "^1.13.1",
     "html-to-image": "^1.11.13",
     "next": "^15.1.6",

@@ -1,0 +1,57 @@
+"use client";
+
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { GithubIcon } from "./icons";
+
+export interface SessionUser {
+  login: string;
+  avatarUrl: string | null;
+}
+
+export default function AuthButton({ user }: { user: SessionUser | null }) {
+  const [loading, setLoading] = useState(false);
+
+  async function signIn() {
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) {
+      setLoading(false);
+      alert("Sign-in failed. Is GitHub OAuth configured in Supabase?");
+    }
+    // On success the browser is redirected to GitHub.
+  }
+
+  if (user) {
+    return (
+      <div className="auth-pill">
+        {user.avatarUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={user.avatarUrl} alt="" width={22} height={22} />
+        )}
+        <span className="auth-login">{user.login}</span>
+        <form action="/auth/signout" method="post">
+          <button type="submit" className="auth-signout" title="Sign out">
+            Sign out
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="auth-signin"
+      onClick={signIn}
+      disabled={loading}
+    >
+      <GithubIcon size={16} />
+      {loading ? "Redirecting…" : "Sign in"}
+    </button>
+  );
+}

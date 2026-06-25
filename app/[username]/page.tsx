@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getGithubStats, GithubError } from "@/lib/github";
 import Dashboard from "@/components/Dashboard";
-import TopBar from "@/components/TopBar";
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -45,7 +44,6 @@ export default async function UserPage({ params }: Props) {
 
   return (
     <>
-      <TopBar initial={handle} />
       <main className="container">
         {error ? (
           <div className="page-error">

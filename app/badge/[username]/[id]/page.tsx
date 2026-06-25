@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCoreStats, GithubError } from "@/lib/github";
 import { getAchievement, RARITY_COLORS, ICON_EMOJI } from "@/lib/achievements";
-import TopBar from "@/components/TopBar";
 import BadgeShare from "@/components/BadgeShare";
 
 interface Props {
@@ -48,7 +47,6 @@ export default async function BadgePage({ params }: Props) {
 
   return (
     <>
-      <TopBar />
       <main className="container">
         {error || !achievement ? (
           <div className="page-error">
