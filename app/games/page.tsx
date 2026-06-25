@@ -19,6 +19,7 @@ interface GameCard {
   title: string;
   desc: string;
   status: "live" | "soon";
+  tag?: string;
 }
 
 const GAMES: GameCard[] = [
@@ -27,6 +28,28 @@ const GAMES: GameCard[] = [
     icon: "fire",
     title: "Streak Survivor",
     desc: "Keep your contribution streak alive. Climb the global leaderboard by current and longest streak.",
+    status: "live",
+  },
+  {
+    href: "/games/city",
+    icon: "buildings-fill",
+    title: "Git City",
+    desc: "Your contributions rebuilt as an explorable 3D city — every commit is a building. Orbit and explore.",
+    status: "live",
+    tag: "Beta",
+  },
+  {
+    href: "/games/league",
+    icon: "trophy-fill",
+    title: "Global League",
+    desc: "The default league: every signed-in developer ranked against each other by contributions this season.",
+    status: "live",
+  },
+  {
+    href: "/games/challenges",
+    icon: "flag-fill",
+    title: "Challenges",
+    desc: "Hard goals to conquer — from a 30-day streak to 10,000 contributions. Track progress and see who's done it.",
     status: "live",
   },
   {
@@ -45,9 +68,9 @@ const GAMES: GameCard[] = [
   },
   {
     href: "/games",
-    icon: "trophy-fill",
-    title: "Group League",
-    desc: "Private or public groups with a monthly points table. Compete with your batch or team.",
+    icon: "people-fill",
+    title: "Private Groups",
+    desc: "Create a private league for your batch or team with its own table. Coming next.",
     status: "soon",
   },
 ];
@@ -96,6 +119,7 @@ export default async function GamesHub() {
               <div className="game-card-body">
                 <h3>
                   {g.title}
+                  {g.tag && <span className="game-tag">{g.tag}</span>}
                   {g.status === "soon" && (
                     <span className="game-soon">Coming soon</span>
                   )}

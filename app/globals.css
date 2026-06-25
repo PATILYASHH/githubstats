@@ -2141,3 +2141,160 @@ a:hover {
     display: none;
   }
 }
+
+/* ---- game card tag (Beta) ---- */
+.game-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #06210d;
+  background: var(--green);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* ---- Global League ---- */
+.league-you {
+  background: rgba(57, 211, 83, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+/* ---- Challenges ---- */
+.challenge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 48px;
+}
+.challenge-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+.challenge-card.done {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.challenge-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.challenge-ico {
+  font-size: 0;
+}
+.challenge-diff {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.challenge-check {
+  margin-left: auto;
+}
+.challenge-card h3 {
+  margin: 0 0 4px;
+}
+.challenge-desc {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 14px;
+  flex: 1;
+}
+.challenge-progress {
+  margin-bottom: 12px;
+}
+.challenge-bar {
+  height: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.challenge-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+.challenge-progress-label {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.challenge-signin {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+.challenge-achievers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-muted);
+  padding-top: 12px;
+}
+.challenge-faces {
+  display: inline-flex;
+  margin-left: auto;
+}
+.challenge-faces img {
+  border-radius: 50%;
+  border: 2px solid var(--bg-elevated);
+  margin-left: -8px;
+}
+
+/* ---- Git City (3D) ---- */
+.gitcity-canvas {
+  width: 100%;
+  height: 68vh;
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #0a0e14;
+}
+.gitcity-loading,
+.gitcity-failed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 0 24px;
+}
+.city-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.city-stats strong {
+  color: var(--text);
+}
+.city-link {
+  margin-left: auto;
+  font-weight: 600;
+}
+.city-roadmap {
+  margin: 16px 0 48px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
