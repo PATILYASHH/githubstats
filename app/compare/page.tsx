@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { GithubStats } from "@/lib/types";
-import TopBar from "@/components/TopBar";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US");
@@ -84,7 +83,6 @@ function CompareInner() {
 
   return (
     <>
-      <TopBar />
       <main className="container">
         <div className="compare-hero">
           <h1>⚔️ Compare developers</h1>
