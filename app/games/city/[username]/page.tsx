@@ -49,8 +49,8 @@ export default async function CityView({ params }: Props) {
     <main className="container">
       <header className="games-subhero">
         <div>
-          <Link href="/games/city/world" className="back-link">
-            ← Explore the city
+          <Link href="/games/city" className="back-link">
+            ← Git City
           </Link>
           <h1>
             <BIcon name="buildings-fill" size={24} /> {handle}&apos;s Git City
