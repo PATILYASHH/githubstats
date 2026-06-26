@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import NavBar from "@/components/NavBar";
+import { getRepoStars } from "@/lib/github";
 
 const SITE = "https://githubstatss.vercel.app";
 
@@ -33,15 +34,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const repoStars = await getRepoStars();
   return (
     <html lang="en">
       <body>
-        <NavBar />
+        <NavBar repoStars={repoStars} />
         {children}
       </body>
     </html>
