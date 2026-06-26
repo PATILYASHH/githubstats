@@ -7,20 +7,21 @@ import {
   aboutItems,
   activityGraphUrl,
   featuredRepos,
+  headerCardUrl,
   socialBadges,
   statsCardUrl,
   streakCardUrl,
   techBadges,
   topLangsUrl,
   trophyUrl,
-  typingHeaderUrl,
-  visitorBadgeUrl,
   type ReadmeOptions,
 } from "@/lib/readme";
 
-// A representative, GitHub-flavored render of the generated README. Driven by
-// the same stats + options as buildReadme(), using the same live widget URLs,
-// so what you see maps directly to what you copy.
+// Live preview rendered from the same stats + options as buildReadme(), using
+// the same self-hosted card/badge endpoints. base = "" → relative URLs hit the
+// current origin (works in dev and prod), so what you see is what you copy.
+const BASE = "";
+
 export default function ReadmePreview({
   stats,
   opts,
@@ -30,10 +31,10 @@ export default function ReadmePreview({
 }) {
   const u = stats.user.login;
   const name = stats.user.name?.trim() || u;
-  const socials = socialBadges(u, opts);
-  const tech = techBadges(stats);
+  const socials = socialBadges(BASE, u, opts);
+  const tech = techBadges(BASE, stats);
   const about = aboutItems(stats, opts);
-  const repos = featuredRepos(stats, opts.theme);
+  const repos = featuredRepos(BASE, stats, opts.theme);
   const pins = repos.filter((r) => r.pinUrl);
   const links = repos.filter((r) => !r.pinUrl);
 
@@ -41,22 +42,11 @@ export default function ReadmePreview({
     <div className="md-preview">
       <div className="md-center">
         {opts.animatedHeader ? (
-          <img
-            src={typingHeaderUrl([
-              `Hi 👋, I'm ${name}`,
-              opts.tagline.slice(0, 40) || u,
-            ])}
-            alt="header"
-          />
+          <img src={headerCardUrl(BASE, `Hi 👋, I'm ${name}`, opts.theme)} alt="header" />
         ) : (
           <h1>Hi 👋, I&apos;m {name}</h1>
         )}
         {opts.tagline.trim() && <h3>{opts.tagline}</h3>}
-        {opts.showVisitors && (
-          <p>
-            <img src={visitorBadgeUrl(u)} alt="Profile views" />
-          </p>
-        )}
         <p className="md-badges">
           {socials.map((s) => (
             <a key={s.key} href={s.href} target="_blank" rel="noreferrer">
@@ -96,13 +86,13 @@ export default function ReadmePreview({
           <h2>📊 GitHub Stats</h2>
           <div className="md-center md-cards">
             {opts.showStats && (
-              <img src={statsCardUrl(u, opts.theme)} alt="GitHub stats" />
+              <img src={statsCardUrl(BASE, u, opts.theme)} alt="GitHub stats" />
             )}
             {opts.showStreak && (
-              <img src={streakCardUrl(u, opts.theme)} alt="GitHub streak" />
+              <img src={streakCardUrl(BASE, u, opts.theme)} alt="GitHub streak" />
             )}
             {opts.showTopLangs && (
-              <img src={topLangsUrl(u, opts.theme)} alt="Top languages" />
+              <img src={topLangsUrl(BASE, u, opts.theme)} alt="Top languages" />
             )}
           </div>
         </section>
@@ -112,7 +102,7 @@ export default function ReadmePreview({
         <section>
           <h2>🏆 Trophies</h2>
           <div className="md-center">
-            <img src={trophyUrl(u, opts.theme)} alt="Trophies" />
+            <img src={trophyUrl(BASE, u, opts.theme)} alt="Trophies" />
           </div>
         </section>
       )}
@@ -122,7 +112,7 @@ export default function ReadmePreview({
           <h2>📈 Activity Graph</h2>
           <img
             className="md-wide"
-            src={activityGraphUrl(u, opts.theme)}
+            src={activityGraphUrl(BASE, u, opts.theme)}
             alt="Activity graph"
           />
         </section>

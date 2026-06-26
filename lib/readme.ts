@@ -1,3 +1,4 @@
+import { colorForLanguage } from "./colors";
 import type { GithubStats } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -6,22 +7,22 @@ import type { GithubStats } from "./types";
 // Turns the stats we already fetch for a GitHub user into a personalized
 // profile README.md — the kind that renders on a `username/username` repo.
 //
-// Two layers of personalization:
-//   1. Real data  → About section, tech-stack badges (from actual top
-//      languages), Featured Projects (from real top repos), social links.
-//   2. Live widgets → the de-facto-standard image cards every profile README
-//      uses (github-readme-stats, streak-stats, trophies, activity graph).
-//
-// This module is the single source of truth for the option logic and every
-// widget/badge URL, so the markdown output and the React preview stay in sync.
+// Every image in the output is served by OUR OWN endpoints (/api/card/* and
+// /api/badge) — no third-party services. This module is the single source of
+// truth for option logic and every card/badge URL, so the markdown output and
+// the React preview stay in sync.
 // ---------------------------------------------------------------------------
 
+// Absolute origin used in the copyable markdown (GitHub fetches images from
+// here). The live preview overrides this with "" so it hits the current origin.
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://githubstatss.vercel.app";
+
 export interface ReadmeOptions {
-  /** Shared theme key, e.g. "tokyonight" (maps per-service where needed). */
+  /** Shared theme key, e.g. "tokyonight". */
   theme: string;
   tagline: string;
   animatedHeader: boolean;
-  showVisitors: boolean;
   showAbout: boolean;
   showTechStack: boolean;
   showStats: boolean;
@@ -41,8 +42,6 @@ export interface ThemeOption {
   label: string;
 }
 
-// Themes that exist across github-readme-stats, streak-stats and (mapped
-// below) the trophy + activity-graph services.
 export const THEMES: ThemeOption[] = [
   { key: "tokyonight", label: "Tokyo Night" },
   { key: "github_dark", label: "GitHub Dark" },
@@ -54,189 +53,54 @@ export const THEMES: ThemeOption[] = [
   { key: "nord", label: "Nord" },
 ];
 
-// ----- per-service theme mapping ------------------------------------------
+// ----- URL builders (shared by markdown + preview) -------------------------
 
-// github-profile-trophy uses its own theme set.
-function trophyTheme(theme: string): string {
-  const ok = new Set([
-    "tokyonight",
-    "radical",
-    "dracula",
-    "gruvbox",
-    "onedark",
-    "nord",
-  ]);
-  if (theme === "github_dark") return "darkhub";
-  if (theme === "merko") return "gruvbox";
-  return ok.has(theme) ? theme : "onedark";
+function cardUrl(
+  base: string,
+  type: string,
+  params: Record<string, string>
+): string {
+  return `${base}/api/card/${type}?${new URLSearchParams(params)}`;
 }
 
-// github-readme-activity-graph uses dashed theme keys.
-function activityTheme(theme: string): string {
-  const map: Record<string, string> = {
-    tokyonight: "tokyo-night",
-    github_dark: "github-compact",
-    radical: "react-dark",
-    dracula: "dracula",
-    gruvbox: "gruvbox",
-    onedark: "react-dark",
-    merko: "merko",
-    nord: "nord",
-  };
-  return map[theme] ?? "github-compact";
+function badgeUrl(base: string, params: Record<string, string>): string {
+  return `${base}/api/badge?${new URLSearchParams(params)}`;
 }
 
-// ----- widget URL builders (shared by markdown + preview) ------------------
-
-export function statsCardUrl(u: string, theme: string): string {
-  const q = new URLSearchParams({
-    username: u,
-    show_icons: "true",
-    count_private: "true",
-    include_all_commits: "true",
-    hide_border: "true",
-    theme,
-  });
-  return `https://github-readme-stats.vercel.app/api?${q}`;
+export function statsCardUrl(base: string, u: string, theme: string): string {
+  return cardUrl(base, "stats", { username: u, theme });
+}
+export function streakCardUrl(base: string, u: string, theme: string): string {
+  return cardUrl(base, "streak", { username: u, theme });
+}
+export function topLangsUrl(base: string, u: string, theme: string): string {
+  return cardUrl(base, "top-langs", { username: u, theme });
+}
+export function trophyUrl(base: string, u: string, theme: string): string {
+  return cardUrl(base, "trophies", { username: u, theme });
+}
+export function activityGraphUrl(base: string, u: string, theme: string): string {
+  return cardUrl(base, "activity", { username: u, theme });
+}
+export function headerCardUrl(base: string, text: string, theme: string): string {
+  return cardUrl(base, "header", { text, theme });
 }
 
-export function streakCardUrl(u: string, theme: string): string {
-  const q = new URLSearchParams({
-    user: u,
-    hide_border: "true",
-    theme,
-  });
-  return `https://github-readme-streak-stats.herokuapp.com/?${q}`;
-}
-
-export function topLangsUrl(u: string, theme: string): string {
-  const q = new URLSearchParams({
-    username: u,
-    layout: "compact",
-    hide_border: "true",
-    langs_count: "8",
-    theme,
-  });
-  return `https://github-readme-stats.vercel.app/api/top-langs/?${q}`;
-}
-
-export function trophyUrl(u: string, theme: string): string {
-  const q = new URLSearchParams({
-    username: u,
-    theme: trophyTheme(theme),
-    column: "7",
-    margin_w: "8",
-    margin_h: "8",
-    "no-frame": "true",
-  });
-  return `https://github-profile-trophy.vercel.app/?${q}`;
-}
-
-export function activityGraphUrl(u: string, theme: string): string {
-  const q = new URLSearchParams({
-    username: u,
-    theme: activityTheme(theme),
-    hide_border: "true",
-    area: "true",
-  });
-  return `https://github-readme-activity-graph.vercel.app/graph?${q}`;
-}
-
-export function visitorBadgeUrl(u: string): string {
-  const q = new URLSearchParams({
-    username: u,
-    label: "Profile views",
-    color: "0e75b6",
-    style: "flat",
-  });
-  return `https://komarev.com/ghpvc/?${q}`;
-}
-
-export function typingHeaderUrl(lines: string[]): string {
-  const q = new URLSearchParams({
-    font: "Fira+Code",
-    weight: "600",
-    size: "26",
-    pause: "1000",
-    color: "2F81F7",
-    center: "true",
-    vCenter: "true",
-    width: "600",
-    height: "60",
-    lines: lines.join(";"),
-  });
-  // URLSearchParams encodes "+" in the font as %2B; the service wants a literal +.
-  return `https://readme-typing-svg.demolab.com?${q.toString().replace(
-    "Fira%2BCode",
-    "Fira+Code"
-  )}`;
-}
-
-// ----- tech-stack badges (shields.io) --------------------------------------
-
-interface BadgeSpec {
-  color: string;
-  logo: string;
-  logoColor?: string;
-}
-
-// Known languages → branded shields badges. Anything else falls back to a
-// neutral badge using the language's own name.
-const LANG_BADGES: Record<string, BadgeSpec> = {
-  JavaScript: { color: "F7DF1E", logo: "javascript", logoColor: "black" },
-  TypeScript: { color: "3178C6", logo: "typescript", logoColor: "white" },
-  Python: { color: "3776AB", logo: "python", logoColor: "white" },
-  Java: { color: "ED8B00", logo: "openjdk", logoColor: "white" },
-  "C++": { color: "00599C", logo: "cplusplus", logoColor: "white" },
-  C: { color: "A8B9CC", logo: "c", logoColor: "black" },
-  Go: { color: "00ADD8", logo: "go", logoColor: "white" },
-  Rust: { color: "000000", logo: "rust", logoColor: "white" },
-  Ruby: { color: "CC342D", logo: "ruby", logoColor: "white" },
-  PHP: { color: "777BB4", logo: "php", logoColor: "white" },
-  Swift: { color: "F05138", logo: "swift", logoColor: "white" },
-  Kotlin: { color: "7F52FF", logo: "kotlin", logoColor: "white" },
-  Dart: { color: "0175C2", logo: "dart", logoColor: "white" },
-  HTML: { color: "E34F26", logo: "html5", logoColor: "white" },
-  CSS: { color: "1572B6", logo: "css3", logoColor: "white" },
-  Shell: { color: "4EAA25", logo: "gnubash", logoColor: "white" },
-  Vue: { color: "4FC08D", logo: "vuedotjs", logoColor: "white" },
-  "Jupyter Notebook": { color: "F37626", logo: "jupyter", logoColor: "white" },
-  Dockerfile: { color: "2496ED", logo: "docker", logoColor: "white" },
-  Lua: { color: "2C2D72", logo: "lua", logoColor: "white" },
-  Scala: { color: "DC322F", logo: "scala", logoColor: "white" },
-  Elixir: { color: "4B275F", logo: "elixir", logoColor: "white" },
-  Haskell: { color: "5D4F85", logo: "haskell", logoColor: "white" },
-  R: { color: "276DC3", logo: "r", logoColor: "white" },
-  "C#": { color: "512BD4", logo: "dotnet", logoColor: "white" },
-};
-
-function encodeBadgeLabel(label: string): string {
-  // shields path-style: escape dashes/underscores, spaces → underscore.
-  return encodeURIComponent(
-    label.replace(/-/g, "--").replace(/_/g, "__").replace(/ /g, "_")
-  );
-}
+// ----- tech-stack badges ---------------------------------------------------
 
 export interface TechBadge {
   name: string;
   url: string;
 }
 
-export function techBadges(stats: GithubStats): TechBadge[] {
-  return stats.languages.map((l) => {
-    const spec = LANG_BADGES[l.name] ?? { color: "555555", logo: "" };
-    const q = new URLSearchParams({ style: "for-the-badge" });
-    if (spec.logo) {
-      q.set("logo", spec.logo);
-      q.set("logoColor", spec.logoColor ?? "white");
-    }
-    return {
-      name: l.name,
-      url: `https://img.shields.io/badge/${encodeBadgeLabel(l.name)}-${
-        spec.color
-      }?${q}`,
-    };
-  });
+export function techBadges(base: string, stats: GithubStats): TechBadge[] {
+  return stats.languages.map((l) => ({
+    name: l.name,
+    url: badgeUrl(base, {
+      message: l.name,
+      color: colorForLanguage(l.name).replace(/^#/, ""),
+    }),
+  }));
 }
 
 // ----- social badges -------------------------------------------------------
@@ -248,23 +112,8 @@ export interface SocialBadge {
   href: string;
 }
 
-function shieldBadge(
-  label: string,
-  color: string,
-  logo: string,
-  logoColor = "white"
-): string {
-  const q = new URLSearchParams({
-    style: "for-the-badge",
-    logo,
-    logoColor,
-  });
-  return `https://img.shields.io/badge/${encodeBadgeLabel(
-    label
-  )}-${color}?${q}`;
-}
-
 export function socialBadges(
+  base: string,
   username: string,
   opts: ReadmeOptions
 ): SocialBadge[] {
@@ -272,7 +121,7 @@ export function socialBadges(
     {
       key: "github",
       label: "GitHub",
-      img: shieldBadge("GitHub", "181717", "github"),
+      img: badgeUrl(base, { message: "GitHub", color: "181717", logo: "github" }),
       href: `https://github.com/${username}`,
     },
   ];
@@ -281,7 +130,7 @@ export function socialBadges(
     list.push({
       key: "linkedin",
       label: "LinkedIn",
-      img: shieldBadge("LinkedIn", "0A66C2", "linkedin"),
+      img: badgeUrl(base, { message: "LinkedIn", color: "0A66C2", logo: "linkedin" }),
       href: `https://linkedin.com/in/${h}`,
     });
   }
@@ -290,7 +139,7 @@ export function socialBadges(
     list.push({
       key: "twitter",
       label: "X",
-      img: shieldBadge("X", "000000", "x"),
+      img: badgeUrl(base, { message: "X", color: "000000", logo: "x" }),
       href: `https://x.com/${h}`,
     });
   }
@@ -301,7 +150,7 @@ export function socialBadges(
     list.push({
       key: "website",
       label: "Website",
-      img: shieldBadge("Website", "255E63", "googlechrome"),
+      img: badgeUrl(base, { message: "Website", color: "255E63", logo: "globe" }),
       href,
     });
   }
@@ -309,7 +158,7 @@ export function socialBadges(
     list.push({
       key: "email",
       label: "Email",
-      img: shieldBadge("Email", "D14836", "gmail"),
+      img: badgeUrl(base, { message: "Email", color: "D14836", logo: "email" }),
       href: `mailto:${opts.email.trim()}`,
     });
   }
@@ -375,6 +224,7 @@ export interface FeaturedRepo {
 }
 
 export function featuredRepos(
+  base: string,
   stats: GithubStats,
   theme: string
 ): FeaturedRepo[] {
@@ -390,14 +240,7 @@ export function featuredRepos(
       stars: r.stars,
       language: r.language,
       pinUrl: isOwn
-        ? `https://github-readme-stats.vercel.app/api/pin/?${new URLSearchParams(
-            {
-              username: owner,
-              repo,
-              theme,
-              hide_border: "true",
-            }
-          )}`
+        ? cardUrl(base, "pin", { username: owner, repo, theme })
         : undefined,
     };
   });
@@ -410,7 +253,6 @@ export function defaultReadmeOptions(stats: GithubStats): ReadmeOptions {
     theme: "tokyonight",
     tagline: stats.user.bio?.trim() || `${stats.rank.title} · ${stats.rank.blurb}`,
     animatedHeader: false,
-    showVisitors: true,
     showAbout: true,
     showTechStack: stats.languages.length > 0,
     showStats: true,
@@ -434,7 +276,11 @@ function esc(s: string): string {
   return s.replace(/[<>]/g, (c) => (c === "<" ? "&lt;" : "&gt;")).trim();
 }
 
-export function buildReadme(stats: GithubStats, opts: ReadmeOptions): string {
+export function buildReadme(
+  stats: GithubStats,
+  opts: ReadmeOptions,
+  base: string = SITE_URL
+): string {
   const u = stats.user.login;
   const name = esc(stats.user.name?.trim() || u);
   const out: string[] = [];
@@ -442,25 +288,14 @@ export function buildReadme(stats: GithubStats, opts: ReadmeOptions): string {
   // ---- header (centered) ----
   out.push(`<div align="center">`, ``);
   if (opts.animatedHeader) {
-    out.push(
-      `![header](${typingHeaderUrl([`Hi 👋, I'm ${name}`, opts.tagline.slice(0, 40) || u])})`,
-      ``
-    );
+    out.push(`![header](${headerCardUrl(base, `Hi 👋, I'm ${name}`, opts.theme)})`, ``);
   } else {
     out.push(`# Hi 👋, I'm ${name}`, ``);
   }
   if (opts.tagline.trim()) out.push(`### ${esc(opts.tagline)}`, ``);
-  if (opts.showVisitors) {
-    out.push(`![Profile views](${visitorBadgeUrl(u)})`, ``);
-  }
-  const socials = socialBadges(u, opts);
+  const socials = socialBadges(base, u, opts);
   if (socials.length) {
-    out.push(
-      socials
-        .map((s) => `[![${s.label}](${s.img})](${s.href})`)
-        .join(" "),
-      ``
-    );
+    out.push(socials.map((s) => `[![${s.label}](${s.img})](${s.href})`).join(" "), ``);
   }
   out.push(`</div>`, ``);
 
@@ -478,13 +313,10 @@ export function buildReadme(stats: GithubStats, opts: ReadmeOptions): string {
 
   // ---- tech stack ----
   if (opts.showTechStack) {
-    const badges = techBadges(stats);
+    const badges = techBadges(base, stats);
     if (badges.length) {
       out.push(`## 🛠️ Tech Stack`, ``);
-      out.push(
-        badges.map((b) => `![${b.name}](${b.url})`).join(" "),
-        ``
-      );
+      out.push(badges.map((b) => `![${b.name}](${b.url})`).join(" "), ``);
     }
   }
 
@@ -492,13 +324,13 @@ export function buildReadme(stats: GithubStats, opts: ReadmeOptions): string {
   if (opts.showStats || opts.showStreak || opts.showTopLangs) {
     out.push(`## 📊 GitHub Stats`, ``, `<div align="center">`, ``);
     if (opts.showStats) {
-      out.push(`![${u}'s GitHub stats](${statsCardUrl(u, opts.theme)})`, ``);
+      out.push(`![${u}'s GitHub stats](${statsCardUrl(base, u, opts.theme)})`, ``);
     }
     if (opts.showStreak) {
-      out.push(`![GitHub Streak](${streakCardUrl(u, opts.theme)})`, ``);
+      out.push(`![GitHub Streak](${streakCardUrl(base, u, opts.theme)})`, ``);
     }
     if (opts.showTopLangs) {
-      out.push(`![Top Languages](${topLangsUrl(u, opts.theme)})`, ``);
+      out.push(`![Top Languages](${topLangsUrl(base, u, opts.theme)})`, ``);
     }
     out.push(`</div>`, ``);
   }
@@ -510,7 +342,7 @@ export function buildReadme(stats: GithubStats, opts: ReadmeOptions): string {
       ``,
       `<div align="center">`,
       ``,
-      `![Trophies](${trophyUrl(u, opts.theme)})`,
+      `![Trophies](${trophyUrl(base, u, opts.theme)})`,
       ``,
       `</div>`,
       ``
@@ -522,25 +354,21 @@ export function buildReadme(stats: GithubStats, opts: ReadmeOptions): string {
     out.push(
       `## 📈 Activity Graph`,
       ``,
-      `[![Activity Graph](${activityGraphUrl(u, opts.theme)})](https://github.com/${u})`,
+      `[![Activity Graph](${activityGraphUrl(base, u, opts.theme)})](https://github.com/${u})`,
       ``
     );
   }
 
   // ---- featured projects ----
   if (opts.showFeatured) {
-    const repos = featuredRepos(stats, opts.theme);
+    const repos = featuredRepos(base, stats, opts.theme);
     if (repos.length) {
       out.push(`## 📌 Featured Projects`, ``);
       const pins = repos.filter((r) => r.pinUrl);
       const links = repos.filter((r) => !r.pinUrl);
       if (pins.length) {
         out.push(`<div align="center">`, ``);
-        out.push(
-          pins
-            .map((r) => `[![${r.repo}](${r.pinUrl})](${r.url})`)
-            .join("\n")
-        );
+        out.push(pins.map((r) => `[![${r.repo}](${r.pinUrl})](${r.url})`).join("\n"));
         out.push(``, `</div>`, ``);
       }
       for (const r of links) {
@@ -562,7 +390,7 @@ export function buildReadme(stats: GithubStats, opts: ReadmeOptions): string {
     ``,
     `<div align="center">`,
     ``,
-    `<sub>✨ Generated with <a href="https://githubstatss.vercel.app/readme">GitHubStats</a></sub>`,
+    `<sub>✨ Generated with <a href="${SITE_URL}/readme">GitHubStats</a></sub>`,
     ``,
     `</div>`,
     ``
