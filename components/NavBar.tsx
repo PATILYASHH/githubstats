@@ -9,6 +9,7 @@ import AuthButton, { type SessionUser } from "./AuthButton";
 
 const LINKS = [
   { href: "/", label: "Home", icon: "house-door-fill" },
+  { href: "/readme", label: "Readme", icon: "markdown" },
   { href: "/games", label: "Games", icon: "controller" },
 ];
 
