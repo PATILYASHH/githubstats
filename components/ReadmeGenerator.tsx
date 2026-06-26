@@ -12,29 +12,20 @@ import type { GithubStats } from "@/lib/types";
 import {
   buildReadme,
   defaultReadmeOptions,
+  getTemplate,
+  optionsForTemplate,
+  TEMPLATES,
   THEMES,
   type ReadmeOptions,
 } from "@/lib/readme";
 import { createClient } from "@/lib/supabase/client";
 import { BIcon } from "./icons";
-import ReadmePreview from "./ReadmePreview";
+import MarkdownPreview from "./MarkdownPreview";
 
 interface Toggle {
   key: keyof ReadmeOptions;
   label: string;
 }
-
-const SECTIONS: Toggle[] = [
-  { key: "showAbout", label: "About Me" },
-  { key: "showTechStack", label: "Tech Stack" },
-  { key: "showStats", label: "Stats card" },
-  { key: "showStreak", label: "Streak card" },
-  { key: "showTopLangs", label: "Top languages" },
-  { key: "showTrophies", label: "Trophies" },
-  { key: "showActivity", label: "Activity graph" },
-  { key: "showFeatured", label: "Featured projects" },
-  { key: "animatedHeader", label: "Animated header" },
-];
 
 const SOCIALS: { key: keyof ReadmeOptions; label: string; placeholder: string }[] = [
   { key: "twitter", label: "X / Twitter", placeholder: "handle" },
@@ -42,6 +33,28 @@ const SOCIALS: { key: keyof ReadmeOptions; label: string; placeholder: string }[
   { key: "website", label: "Website", placeholder: "yoursite.com" },
   { key: "email", label: "Email", placeholder: "you@mail.com" },
 ];
+
+// Section toggles relevant to the chosen template (so you can only turn off
+// what the template actually arranges — no confusing dead switches).
+function availableToggles(opts: ReadmeOptions): Toggle[] {
+  const tpl = getTemplate(opts.template);
+  const list: Toggle[] = [];
+  for (const key of tpl.order) {
+    if (key === "about") list.push({ key: "showAbout", label: "About Me" });
+    else if (key === "tech") list.push({ key: "showTechStack", label: "Tech Stack" });
+    else if (key === "stats") {
+      list.push({ key: "showStats", label: "Stats card" });
+      if (tpl.statsLayout === "row") {
+        list.push({ key: "showStreak", label: "Streak card" });
+        list.push({ key: "showTopLangs", label: "Top languages" });
+      }
+    } else if (key === "trophies") list.push({ key: "showTrophies", label: "Trophies" });
+    else if (key === "activity") list.push({ key: "showActivity", label: "Activity graph" });
+    else if (key === "featured") list.push({ key: "showFeatured", label: "Featured projects" });
+  }
+  list.push({ key: "animatedHeader", label: "Animated header" });
+  return list;
+}
 
 export default function ReadmeGenerator() {
   const params = useSearchParams();
@@ -66,8 +79,14 @@ export default function ReadmeGenerator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const markdown = useMemo(
+  // Export markdown uses the absolute origin (for GitHub); the preview uses
+  // relative URLs so cards resolve against the current origin in dev + prod.
+  const exportMd = useMemo(
     () => (stats && opts ? buildReadme(stats, opts) : ""),
+    [stats, opts]
+  );
+  const previewMd = useMemo(
+    () => (stats && opts ? buildReadme(stats, opts, "") : ""),
     [stats, opts]
   );
 
@@ -108,9 +127,14 @@ export default function ReadmeGenerator() {
     setOpts((o) => (o ? { ...o, [key]: value } : o));
   }
 
+  function pickTemplate(id: string) {
+    if (!stats) return;
+    setOpts((o) => (o ? optionsForTemplate(stats, id, o) : o));
+  }
+
   async function copy() {
     try {
-      await navigator.clipboard.writeText(markdown);
+      await navigator.clipboard.writeText(exportMd);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -119,7 +143,7 @@ export default function ReadmeGenerator() {
   }
 
   function download() {
-    const blob = new Blob([markdown], { type: "text/markdown" });
+    const blob = new Blob([exportMd], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -136,8 +160,8 @@ export default function ReadmeGenerator() {
           <span className="grad">Profile README</span>
         </h1>
         <p>
-          Generate a personalized GitHub profile README from your real activity —
-          stats, streaks, top languages and featured projects. Copy it into your{" "}
+          Generate a personalized GitHub profile README from your real activity.
+          Pick a layout, tweak it, then copy it into your{" "}
           <code>username/username</code> repo.
         </p>
         <form className="readme-form" onSubmit={onSubmit}>
@@ -161,15 +185,34 @@ export default function ReadmeGenerator() {
         <div className="readme-layout">
           {/* ---- controls ---- */}
           <aside className="readme-controls">
+            <Panel title="Template">
+              <div className="readme-template-list">
+                {TEMPLATES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`readme-template${
+                      opts.template === t.id ? " active" : ""
+                    }`}
+                    onClick={() => pickTemplate(t.id)}
+                  >
+                    <span className="readme-template-name">
+                      {t.name}
+                      {opts.template === t.id && <BIcon name="check-circle-fill" size={14} />}
+                    </span>
+                    <span className="readme-template-blurb">{t.blurb}</span>
+                  </button>
+                ))}
+              </div>
+            </Panel>
+
             <Panel title="Theme">
               <div className="readme-themes">
                 {THEMES.map((t) => (
                   <button
                     key={t.key}
                     type="button"
-                    className={`readme-chip${
-                      opts.theme === t.key ? " active" : ""
-                    }`}
+                    className={`readme-chip${opts.theme === t.key ? " active" : ""}`}
                     onClick={() => set("theme", t.key)}
                   >
                     {t.label}
@@ -189,7 +232,7 @@ export default function ReadmeGenerator() {
 
             <Panel title="Sections">
               <div className="readme-toggles">
-                {SECTIONS.map((s) => (
+                {availableToggles(opts).map((s) => (
                   <label key={s.key} className="readme-toggle">
                     <input
                       type="checkbox"
@@ -252,11 +295,11 @@ export default function ReadmeGenerator() {
 
             {tab === "preview" ? (
               <div className="readme-pane">
-                <ReadmePreview stats={stats} opts={opts} />
+                <MarkdownPreview markdown={previewMd} />
               </div>
             ) : (
               <pre className="readme-code">
-                <code>{markdown}</code>
+                <code>{exportMd}</code>
               </pre>
             )}
 
