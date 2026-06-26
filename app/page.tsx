@@ -6,9 +6,13 @@ import Landing from "@/components/Landing";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "GitHubStats — Showcase your GitHub story",
+  // Absolute: the home page is the brand title, not "Home · GitHubStats".
+  title: {
+    absolute:
+      "GitHubStats — GitHub Stats Tracker, Profile README Generator & Dev Games",
+  },
   description:
-    "Sign in to see your GitHub contributions, streaks, dev rank and top languages — and compete in games built on your real activity.",
+    "See any GitHub profile's contributions, streaks, dev rank and top languages, generate a personalized profile README, and compete in games built on real activity.",
   alternates: { canonical: "/" },
 };
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import ReadmeGenerator from "@/components/ReadmeGenerator";
 
 export const metadata: Metadata = {
-  title: "Profile README Generator — build your GitHub profile README",
+  title: "Profile README Generator",
   description:
     "Generate a personalized GitHub profile README.md from your real activity: stats, streaks, top languages, trophies and featured projects. Copy or download in one click.",
   alternates: { canonical: "/readme" },
