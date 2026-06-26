@@ -1,4 +1,5 @@
 import { colorForLanguage } from "./colors";
+import { GITHUB_REPO } from "./constants";
 import { computeRank, computeFunFacts, computeWeekdayHistogram } from "./rank";
 import type {
   ContribDay,
@@ -421,4 +422,16 @@ export async function getRepoCard(
     forks: data.forks_count ?? 0,
     url: data.html_url ?? `https://github.com/${o}/${repo}`,
   };
+}
+
+// Star count for this project's own repo, for the nav bar badge. Never throws —
+// returns null if GitHub is unreachable so the nav still renders.
+export async function getRepoStars(): Promise<number | null> {
+  try {
+    const [owner, repo] = GITHUB_REPO.split("/");
+    const { stars } = await getRepoCard(owner, repo);
+    return stars;
+  } catch {
+    return null;
+  }
 }

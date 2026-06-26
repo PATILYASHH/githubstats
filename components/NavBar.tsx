@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { GITHUB_REPO_URL } from "@/lib/constants";
 import { GithubIcon, BIcon } from "./icons";
 import AuthButton, { type SessionUser } from "./AuthButton";
 
@@ -13,7 +14,12 @@ const LINKS = [
   { href: "/games", label: "Games", icon: "controller" },
 ];
 
-export default function NavBar() {
+function formatStars(n: number): string {
+  if (n < 1000) return String(n);
+  return (Math.round(n / 100) / 10).toFixed(1).replace(/\.0$/, "") + "k";
+}
+
+export default function NavBar({ repoStars }: { repoStars?: number | null }) {
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState("");
@@ -91,6 +97,23 @@ export default function NavBar() {
           aria-label="GitHub username"
         />
       </form>
+
+      <a
+        className="nav-star"
+        href={GITHUB_REPO_URL}
+        target="_blank"
+        rel="noreferrer"
+        title="Star GitHubStats on GitHub"
+        aria-label="Star GitHubStats on GitHub"
+      >
+        <GithubIcon size={16} />
+        <span className="nav-star-text">Star</span>
+        {repoStars != null && (
+          <span className="nav-star-count">
+            <BIcon name="star-fill" size={12} /> {formatStars(repoStars)}
+          </span>
+        )}
+      </a>
 
       <AuthButton user={user} />
     </nav>
