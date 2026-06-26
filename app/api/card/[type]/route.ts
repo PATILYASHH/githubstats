@@ -6,6 +6,7 @@ import { renderActivityCard } from "@/lib/cards/activity";
 import { renderTrophyCard } from "@/lib/cards/trophies";
 import { renderPinCard } from "@/lib/cards/pin";
 import { renderHeader } from "@/lib/cards/header";
+import { renderBanner } from "@/lib/cards/banner";
 import { errorCard } from "@/lib/cards/svg";
 
 export const runtime = "nodejs";
@@ -31,10 +32,15 @@ export async function GET(
   const theme = searchParams.get("theme") ?? undefined;
 
   try {
-    // Header is text-only — no GitHub fetch needed.
+    // Header + banner are text-only — no GitHub fetch needed.
     if (type === "header") {
       const text = searchParams.get("text") || "Hello 👋";
       return svg(renderHeader(text, theme));
+    }
+    if (type === "banner") {
+      const name = searchParams.get("name") || "Hello";
+      const subtitle = searchParams.get("subtitle") || "";
+      return svg(renderBanner(name, subtitle, theme));
     }
 
     if (type === "pin") {
