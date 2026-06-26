@@ -2,37 +2,36 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getGithubStats, GithubError } from "@/lib/github";
 import Dashboard from "@/components/Dashboard";
-import { DEFAULT_USER } from "@/lib/config";
-
-const description = `${DEFAULT_USER}'s GitHub contributions, streaks, dev rank, top languages and more. Search any other developer from the top bar.`;
+import Landing from "@/components/Landing";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: `${DEFAULT_USER}'s GitHub stats`,
-  description,
+  title: "GitHubStats — Showcase your GitHub story",
+  description:
+    "Sign in to see your GitHub contributions, streaks, dev rank and top languages — and compete in games built on your real activity.",
   alternates: { canonical: "/" },
-  openGraph: {
-    title: `${DEFAULT_USER}'s GitHub stats`,
-    description,
-    url: "/",
-    type: "profile",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: `${DEFAULT_USER}'s GitHub stats`,
-    description,
-  },
 };
 
-// Render on demand (like /[username]) so we never prerender stale stats.
 export const dynamic = "force-dynamic";
 
-const EXAMPLES = ["torvalds", "gaearon", "sindresorhus"];
-
 export default async function Home() {
+  // Signed-in users see their own dashboard; guests get the landing page.
+  let login: string | undefined;
+  if (isSupabaseConfigured()) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    login = (user?.user_metadata?.user_name ??
+      user?.user_metadata?.preferred_username) as string | undefined;
+  }
+
+  if (!login) return <Landing />;
+
   let stats = null;
   let error: string | null = null;
   try {
-    stats = await getGithubStats(DEFAULT_USER);
+    stats = await getGithubStats(login);
   } catch (err) {
     error = err instanceof GithubError ? err.message : "Something went wrong.";
   }
@@ -44,15 +43,7 @@ export default async function Home() {
           <div className="page-error">
             <div className="page-error-emoji">⚠️</div>
             <h2>{error}</h2>
-            <p>Try another developer — search in the top bar, or pick one:</p>
-            <div className="examples">
-              {EXAMPLES.map((ex, i) => (
-                <span key={ex}>
-                  <Link href={`/${ex}`}>{ex}</Link>
-                  {i < EXAMPLES.length - 1 ? " · " : ""}
-                </span>
-              ))}
-            </div>
+            <p>We couldn&apos;t load your GitHub stats right now.</p>
           </div>
         ) : (
           stats && <Dashboard stats={stats} />
@@ -68,8 +59,7 @@ export default async function Home() {
           >
             GitHub
           </a>{" "}
-          · <Link href="/compare">Compare developers</Link> ·{" "}
-          <Link href="/games">Games</Link>
+          · <Link href="/compare">Compare</Link> · <Link href="/games">Games</Link>
         </p>
       </footer>
     </>
