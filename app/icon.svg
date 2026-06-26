@@ -1,0 +1,38 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#161b22"/>
+    </linearGradient>
+    <linearGradient id="g" x1="10" y1="54" x2="54" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#39d353"/>
+      <stop offset="1" stop-color="#2f81f7"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- faint contribution grid (empty cells) -->
+  <g fill="#283039">
+    <rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/>
+    <rect x="13.5" y="23.5" width="7" height="7" rx="1.6"/>
+    <rect x="13.5" y="33.5" width="7" height="7" rx="1.6"/>
+    <rect x="23.5" y="13.5" width="7" height="7" rx="1.6"/>
+    <rect x="23.5" y="23.5" width="7" height="7" rx="1.6"/>
+    <rect x="33.5" y="13.5" width="7" height="7" rx="1.6"/>
+  </g>
+
+  <!-- lit cells: a rising staircase swept green -> blue -->
+  <g fill="url(#g)">
+    <rect x="13.5" y="43.5" width="7" height="7" rx="1.6"/>
+    <rect x="23.5" y="33.5" width="7" height="7" rx="1.6"/>
+    <rect x="23.5" y="43.5" width="7" height="7" rx="1.6"/>
+    <rect x="33.5" y="23.5" width="7" height="7" rx="1.6"/>
+    <rect x="33.5" y="33.5" width="7" height="7" rx="1.6"/>
+    <rect x="33.5" y="43.5" width="7" height="7" rx="1.6"/>
+    <rect x="43.5" y="13.5" width="7" height="7" rx="1.6"/>
+    <rect x="43.5" y="23.5" width="7" height="7" rx="1.6"/>
+    <rect x="43.5" y="33.5" width="7" height="7" rx="1.6"/>
+    <rect x="43.5" y="43.5" width="7" height="7" rx="1.6"/>
+  </g>
+</svg>
