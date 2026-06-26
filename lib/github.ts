@@ -379,3 +379,46 @@ export async function getGithubStats(username: string): Promise<GithubStats> {
   const topRepos = await getTopRepos(core.user.login, core.user.createdAt);
   return { ...core, topRepos };
 }
+
+export interface RepoCard {
+  name: string; // repo name (no owner)
+  fullName: string; // owner/repo
+  owner: string;
+  description: string | null;
+  language: string | null;
+  stars: number;
+  forks: number;
+  url: string;
+}
+
+// A single repository's headline data — used by the pin (featured project) card.
+export async function getRepoCard(
+  owner: string,
+  repo: string
+): Promise<RepoCard> {
+  const o = cleanUsername(owner);
+  if (!/^[\w.-]{1,100}$/.test(repo)) {
+    throw new GithubError("Invalid repository name.", 400);
+  }
+  const res = await fetch(
+    `${GH_API}/repos/${encodeURIComponent(o)}/${encodeURIComponent(repo)}`,
+    { headers: ghHeaders(), next: { revalidate: 60 * 30 } }
+  );
+  if (res.status === 404) {
+    throw new GithubError(`Repository "${o}/${repo}" not found.`, 404);
+  }
+  if (!res.ok) {
+    throw new GithubError(`GitHub returned ${res.status}.`, res.status);
+  }
+  const data = await res.json();
+  return {
+    name: data.name,
+    fullName: data.full_name,
+    owner: data.owner?.login ?? o,
+    description: data.description ?? null,
+    language: data.language ?? null,
+    stars: data.stargazers_count ?? 0,
+    forks: data.forks_count ?? 0,
+    url: data.html_url ?? `https://github.com/${o}/${repo}`,
+  };
+}

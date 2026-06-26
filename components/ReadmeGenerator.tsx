@@ -33,7 +33,6 @@ const SECTIONS: Toggle[] = [
   { key: "showTrophies", label: "Trophies" },
   { key: "showActivity", label: "Activity graph" },
   { key: "showFeatured", label: "Featured projects" },
-  { key: "showVisitors", label: "Visitor badge" },
   { key: "animatedHeader", label: "Animated header" },
 ];
 
@@ -264,8 +263,9 @@ export default function ReadmeGenerator() {
             <p className="readme-hint">
               <BIcon name="info-circle" size={14} /> Create a public repo named{" "}
               <code>{stats.user.login}/{stats.user.login}</code>, add this as{" "}
-              <code>README.md</code>, and it shows on your profile. Stat cards are
-              powered by open-source services and update automatically.
+              <code>README.md</code>, and it shows on your profile. Every card is
+              served by GitHubStats itself — no third-party widgets — and refreshes
+              automatically.
             </p>
           </section>
         </div>
