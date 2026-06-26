@@ -30,6 +30,7 @@ export interface ReadmeOptions {
   template: string;
   theme: string;
   tagline: string;
+  role: string;
   animatedHeader: boolean;
   showAbout: boolean;
   showTechStack: boolean;
@@ -39,10 +40,22 @@ export interface ReadmeOptions {
   showTrophies: boolean;
   showActivity: boolean;
   showFeatured: boolean;
+  // Intro details (GitHub default-template style).
+  currentlyLearning: string;
+  collaborateOn: string;
+  askMeAbout: string;
+  funFact: string;
+  pronouns: string;
+  // Socials.
   twitter: string;
   linkedin: string;
   email: string;
   website: string;
+  instagram: string;
+  youtube: string;
+  devto: string;
+  medium: string;
+  discord: string;
 }
 
 export interface ThemeOption {
@@ -71,6 +84,7 @@ export interface Template {
   align: "center" | "left"; // alignment for about/tech/featured
   aboutStyle: "bullets" | "line" | "prose";
   statsLayout: "row" | "single";
+  headerStyle: "banner" | "plain"; // animated banner vs text header
   defaults: Partial<ReadmeOptions>;
 }
 
@@ -89,21 +103,23 @@ export const TEMPLATES: Template[] = [
   {
     id: "comprehensive",
     name: "Comprehensive",
-    blurb: "The full story — about, tech, stat cards, trophies, activity and projects.",
+    blurb: "The full story — animated banner, about, tech, stat cards, trophies, activity, projects.",
     order: ["header", "about", "tech", "stats", "trophies", "activity", "featured"],
     align: "left",
     aboutStyle: "bullets",
     statsLayout: "row",
+    headerStyle: "banner",
     defaults: { ...ALL_ON, theme: "tokyonight", animatedHeader: false },
   },
   {
     id: "minimal",
     name: "Minimal",
-    blurb: "Clean and understated — a header, a one-liner, and a single stats card.",
+    blurb: "Clean and understated — a simple header, a one-liner, and a single stats card.",
     order: ["header", "about", "stats"],
     align: "center",
     aboutStyle: "line",
     statsLayout: "single",
+    headerStyle: "plain",
     defaults: {
       ...ALL_ON,
       showTechStack: false,
@@ -119,11 +135,12 @@ export const TEMPLATES: Template[] = [
   {
     id: "data",
     name: "Data-Driven",
-    blurb: "Cards everywhere — stats, streak, languages, activity and trophies. Minimal prose.",
+    blurb: "Cards everywhere — animated stats, streak, languages, activity and trophies.",
     order: ["header", "stats", "activity", "trophies", "tech"],
     align: "center",
     aboutStyle: "line",
     statsLayout: "row",
+    headerStyle: "banner",
     defaults: {
       ...ALL_ON,
       showAbout: false,
@@ -135,11 +152,12 @@ export const TEMPLATES: Template[] = [
   {
     id: "professional",
     name: "Professional",
-    blurb: "Resume-style — prose intro, tech, featured projects, one stats card. No flair.",
+    blurb: "Resume-style — banner with role, prose intro, tech, featured projects, one stats card.",
     order: ["header", "about", "tech", "featured", "stats"],
     align: "left",
     aboutStyle: "prose",
     statsLayout: "single",
+    headerStyle: "banner",
     defaults: {
       ...ALL_ON,
       showStreak: false,
@@ -152,11 +170,12 @@ export const TEMPLATES: Template[] = [
   {
     id: "creative",
     name: "Creative",
-    blurb: "Flashy and centered — animated header, badges, cards, trophies and activity.",
+    blurb: "Flashy and centered — animated banner, badges, all cards, trophies and activity.",
     order: ["header", "about", "tech", "stats", "trophies", "activity"],
     align: "center",
     aboutStyle: "line",
     statsLayout: "row",
+    headerStyle: "banner",
     defaults: {
       ...ALL_ON,
       showFeatured: false,
@@ -197,6 +216,14 @@ export function activityGraphUrl(base: string, u: string, theme: string): string
 }
 export function headerCardUrl(base: string, text: string, theme: string): string {
   return cardUrl(base, "header", { text, theme });
+}
+export function bannerUrl(
+  base: string,
+  name: string,
+  subtitle: string,
+  theme: string
+): string {
+  return cardUrl(base, "banner", { name, subtitle, theme });
 }
 
 // ----- badges --------------------------------------------------------------
@@ -273,6 +300,57 @@ export function socialBadges(
       href: `mailto:${opts.email.trim()}`,
     });
   }
+  if (opts.instagram.trim()) {
+    const h = opts.instagram.trim().replace(/^@/, "").replace(/^.*instagram\.com\//, "");
+    list.push({
+      key: "instagram",
+      label: "Instagram",
+      img: badgeUrl(base, { message: "Instagram", color: "E4405F", logo: "instagram" }),
+      href: `https://instagram.com/${h}`,
+    });
+  }
+  if (opts.youtube.trim()) {
+    const v = opts.youtube.trim();
+    const href = /^https?:\/\//.test(v)
+      ? v
+      : `https://youtube.com/${v.startsWith("@") ? v : "@" + v}`;
+    list.push({
+      key: "youtube",
+      label: "YouTube",
+      img: badgeUrl(base, { message: "YouTube", color: "FF0000", logo: "youtube" }),
+      href,
+    });
+  }
+  if (opts.devto.trim()) {
+    const h = opts.devto.trim().replace(/^@/, "").replace(/^.*dev\.to\//, "");
+    list.push({
+      key: "devto",
+      label: "Dev.to",
+      img: badgeUrl(base, { message: "Dev.to", color: "0A0A0A", logo: "devto" }),
+      href: `https://dev.to/${h}`,
+    });
+  }
+  if (opts.medium.trim()) {
+    const v = opts.medium.trim().replace(/^@?/, "@");
+    list.push({
+      key: "medium",
+      label: "Medium",
+      img: badgeUrl(base, { message: "Medium", color: "12100E", logo: "medium" }),
+      href: /^https?:\/\//.test(opts.medium.trim())
+        ? opts.medium.trim()
+        : `https://medium.com/${v}`,
+    });
+  }
+  if (opts.discord.trim()) {
+    list.push({
+      key: "discord",
+      label: "Discord",
+      img: badgeUrl(base, { message: "Discord", color: "5865F2", logo: "discord" }),
+      href: /^https?:\/\//.test(opts.discord.trim())
+        ? opts.discord.trim()
+        : `https://discord.com/users/${opts.discord.trim()}`,
+    });
+  }
   return list;
 }
 
@@ -298,9 +376,18 @@ export function aboutItems(stats: GithubStats, opts: ReadmeOptions): AboutItem[]
       value: featured.name.split("/")[1] ?? featured.name,
     });
   }
+  if (opts.currentlyLearning.trim()) {
+    items.push({ emoji: "🌱", label: "I'm currently learning", value: opts.currentlyLearning.trim() });
+  }
+  if (opts.collaborateOn.trim()) {
+    items.push({ emoji: "👯", label: "I'm looking to collaborate on", value: opts.collaborateOn.trim() });
+  }
+  if (opts.askMeAbout.trim()) {
+    items.push({ emoji: "💬", label: "Ask me about", value: opts.askMeAbout.trim() });
+  }
   const langs = stats.languages.slice(0, 3).map((l) => l.name);
   if (langs.length) {
-    items.push({ emoji: "🌱", label: "I work mostly with", value: langs.join(", ") });
+    items.push({ emoji: "🧰", label: "I work mostly with", value: langs.join(", ") });
   }
   if (stats.user.location) {
     items.push({ emoji: "📍", label: "Based in", value: stats.user.location });
@@ -308,8 +395,14 @@ export function aboutItems(stats: GithubStats, opts: ReadmeOptions): AboutItem[]
   if (stats.user.company) {
     items.push({ emoji: "🏢", label: "At", value: stats.user.company });
   }
+  if (opts.pronouns.trim()) {
+    items.push({ emoji: "😄", label: "Pronouns:", value: opts.pronouns.trim() });
+  }
+  if (opts.funFact.trim()) {
+    items.push({ emoji: "⚡", label: "Fun fact:", value: opts.funFact.trim() });
+  }
   items.push({
-    emoji: "⚡",
+    emoji: "📊",
     label: "",
     value: `${fmt(stats.contributions.total)} contributions · ${
       stats.contributions.longestStreak
@@ -361,6 +454,7 @@ export function defaultReadmeOptions(stats: GithubStats): ReadmeOptions {
     template: "comprehensive",
     theme: "tokyonight",
     tagline: stats.user.bio?.trim() || `${stats.rank.title} · ${stats.rank.blurb}`,
+    role: "",
     animatedHeader: false,
     showAbout: true,
     showTechStack: stats.languages.length > 0,
@@ -370,10 +464,20 @@ export function defaultReadmeOptions(stats: GithubStats): ReadmeOptions {
     showTrophies: true,
     showActivity: true,
     showFeatured: stats.topRepos.items.length > 0,
+    currentlyLearning: "",
+    collaborateOn: "",
+    askMeAbout: "",
+    funFact: "",
+    pronouns: "",
     twitter: "",
     linkedin: "",
     email: "",
     website: stats.user.blog?.trim() || "",
+    instagram: "",
+    youtube: "",
+    devto: "",
+    medium: "",
+    discord: "",
   };
   return optionsForTemplate(stats, "comprehensive", base);
 }
@@ -419,14 +523,21 @@ function center(lines: string[]): string[] {
 }
 
 function renderHeader(ctx: Ctx): string[] {
-  const { opts, base, u, name } = ctx;
+  const { opts, base, u, name, tpl } = ctx;
   const lines: string[] = [];
-  if (opts.animatedHeader) {
+  const subtitle = opts.role.trim() || opts.tagline.trim();
+
+  if (tpl.headerStyle === "banner") {
+    // The banner already carries the name + subtitle.
+    lines.push(`![banner](${bannerUrl(base, name, subtitle, opts.theme)})`, ``);
+  } else if (opts.animatedHeader) {
     lines.push(`![header](${headerCardUrl(base, `Hi 👋, I'm ${name}`, opts.theme)})`, ``);
+    if (opts.tagline.trim()) lines.push(`### ${esc(opts.tagline)}`, ``);
   } else {
     lines.push(`# Hi 👋, I'm ${name}`, ``);
+    if (opts.tagline.trim()) lines.push(`### ${esc(opts.tagline)}`, ``);
   }
-  if (opts.tagline.trim()) lines.push(`### ${esc(opts.tagline)}`, ``);
+
   const socials = socialBadges(base, u, opts);
   if (socials.length) {
     lines.push(socials.map((s) => `[![${s.label}](${s.img})](${s.href})`).join(" "));
@@ -443,6 +554,7 @@ function renderAbout(ctx: Ctx): string[] {
   if (tpl.aboutStyle === "line") {
     const line = items
       .filter((it) => it.value)
+      .slice(0, 4)
       .map((it) => `${it.emoji} ${esc(it.value!)}`)
       .join(" &nbsp;·&nbsp; ");
     if (!line) return [];

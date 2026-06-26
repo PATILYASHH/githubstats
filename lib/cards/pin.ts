@@ -3,7 +3,6 @@ import { colorForLanguage } from "../colors";
 import { cardTheme, type CardTheme } from "./theme";
 import { escapeXml, fmt, frame, icon, textWidth, truncate } from "./svg";
 
-// Wrap a description into up to `maxLines` lines within a pixel width.
 function wrap(text: string, size: number, maxPx: number, maxLines: number): string[] {
   const words = text.split(/\s+/);
   const lines: string[] = [];
@@ -32,34 +31,32 @@ export function renderPinCard(repo: RepoCard, themeKey?: string): string {
   const H = 130;
   const [open, close] = frame(W, H, t);
 
-  const title = truncate(repo.fullName, 15, W - 80, true);
-  const descLines = repo.description
-    ? wrap(repo.description, 13, W - 50, 2)
-    : [];
+  const title = truncate(repo.fullName, 15, W - 90, true);
+  const descLines = repo.description ? wrap(repo.description, 13, W - 50, 2) : [];
   const langColor = repo.language ? colorForLanguage(repo.language) : t.icon;
 
   const footY = H - 22;
-  const metaParts: string[] = [];
+  const parts: string[] = [];
+  let cursorX = 25;
   if (repo.language) {
-    metaParts.push(
-      `<circle cx="31" cy="${footY - 4}" r="6" fill="${langColor}"/>` +
-        `<text x="44" y="${footY}" class="sub" fill="${t.text}" font-size="13">${escapeXml(
+    parts.push(
+      `<circle cx="${cursorX + 6}" cy="${footY - 4}" r="6" fill="${langColor}"/>` +
+        `<text x="${cursorX + 19}" y="${footY}" class="sub" fill="${t.text}" font-size="13">${escapeXml(
           repo.language
         )}</text>`
     );
+    cursorX += 19 + textWidth(repo.language, 13) + 22;
   }
-  const langW = repo.language ? 40 + textWidth(repo.language, 13) + 24 : 25;
-  const starX = repo.language ? langW : 25;
-  metaParts.push(
-    `${icon("star", starX, footY - 14, t.text, 14)}` +
-      `<text x="${starX + 18}" y="${footY}" class="sub" fill="${t.text}" font-size="13">${fmt(
+  parts.push(
+    `${icon("star", cursorX, footY - 14, t.text, 14)}` +
+      `<text x="${cursorX + 18}" y="${footY}" class="sub" fill="${t.text}" font-size="13">${fmt(
         repo.stars
       )}</text>`
   );
-  const forkX = starX + 18 + textWidth(fmt(repo.stars), 13) + 18;
-  metaParts.push(
-    `${icon("fork", forkX, footY - 14, t.text, 14)}` +
-      `<text x="${forkX + 18}" y="${footY}" class="sub" fill="${t.text}" font-size="13">${fmt(
+  cursorX += 18 + textWidth(fmt(repo.stars), 13) + 20;
+  parts.push(
+    `${icon("fork", cursorX, footY - 14, t.text, 14)}` +
+      `<text x="${cursorX + 18}" y="${footY}" class="sub" fill="${t.text}" font-size="13">${fmt(
         repo.forks
       )}</text>`
   );
@@ -67,16 +64,17 @@ export function renderPinCard(repo: RepoCard, themeKey?: string): string {
   const desc = descLines
     .map(
       (l, i) =>
-        `<text x="25" y="${64 + i * 20}" class="label" fill="${t.text}">${escapeXml(l)}</text>`
+        `<text x="25" y="${66 + i * 20}" class="label" fill="${t.text}">${escapeXml(l)}</text>`
     )
     .join("\n");
 
   return `${open}
-  <g class="fade">
+  <g class="r1">
+    <circle cx="33" cy="34" r="14" fill="${t.icon}" fill-opacity="0.16"/>
     ${icon("repo", 25, 26, t.icon, 16)}
-    <text x="48" y="39" class="card-title" fill="${t.title}">${escapeXml(title)}</text>
+    <text x="54" y="39" class="title" fill="url(#accent)">${escapeXml(title)}</text>
   </g>
-  <g class="fade2">${desc}</g>
-  <g class="fade3">${metaParts.join("\n  ")}</g>
+  <g class="r2">${desc}</g>
+  <g class="r3">${parts.join("\n  ")}</g>
 ${close}`;
 }

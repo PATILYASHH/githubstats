@@ -27,11 +27,28 @@ interface Toggle {
   label: string;
 }
 
-const SOCIALS: { key: keyof ReadmeOptions; label: string; placeholder: string }[] = [
+type Field = { key: keyof ReadmeOptions; label: string; placeholder: string };
+
+// Personal intro details (feed the About section + banner).
+const DETAILS: Field[] = [
+  { key: "role", label: "Role / headline", placeholder: "Full-Stack Developer" },
+  { key: "currentlyLearning", label: "Currently learning", placeholder: "Rust, k8s" },
+  { key: "collaborateOn", label: "Looking to collaborate on", placeholder: "open-source AI tools" },
+  { key: "askMeAbout", label: "Ask me about", placeholder: "React, Node, Tally" },
+  { key: "funFact", label: "Fun fact", placeholder: "I love mechanical keyboards" },
+  { key: "pronouns", label: "Pronouns", placeholder: "he/him" },
+];
+
+const SOCIALS: Field[] = [
   { key: "twitter", label: "X / Twitter", placeholder: "handle" },
   { key: "linkedin", label: "LinkedIn", placeholder: "in/your-name" },
   { key: "website", label: "Website", placeholder: "yoursite.com" },
   { key: "email", label: "Email", placeholder: "you@mail.com" },
+  { key: "instagram", label: "Instagram", placeholder: "handle" },
+  { key: "youtube", label: "YouTube", placeholder: "@channel" },
+  { key: "devto", label: "Dev.to", placeholder: "username" },
+  { key: "medium", label: "Medium", placeholder: "@username" },
+  { key: "discord", label: "Discord", placeholder: "invite or user id" },
 ];
 
 // Section toggles relevant to the chosen template (so you can only turn off
@@ -228,6 +245,25 @@ export default function ReadmeGenerator() {
                 onChange={(e) => set("tagline", e.target.value)}
                 placeholder="A short headline"
               />
+            </Panel>
+
+            <Panel title="About you">
+              <div className="readme-socials">
+                {DETAILS.map((s) => (
+                  <label key={s.key} className="readme-field">
+                    <span>{s.label}</span>
+                    <input
+                      className="readme-input"
+                      value={String(opts[s.key] ?? "")}
+                      onChange={(e) => set(s.key, e.target.value as never)}
+                      placeholder={s.placeholder}
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                    />
+                  </label>
+                ))}
+              </div>
             </Panel>
 
             <Panel title="Sections">

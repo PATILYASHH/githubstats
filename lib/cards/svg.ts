@@ -1,5 +1,7 @@
 // Shared helpers for building SVG stat cards by hand (no third-party services).
 
+import type { CardTheme } from "./theme";
+
 export const FONT =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 
@@ -72,6 +74,8 @@ export const ICONS: Record<string, string> = {
   calendar:
     "M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z",
   fork: "M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m0 2.122a2.25 2.25 0 1 0-1.5 0v.878A2.25 2.25 0 0 0 5.75 8.5h1.5v2.128a2.251 2.251 0 1 0 1.5 0V8.5h1.5a2.25 2.25 0 0 0 2.25-2.25v-.878a2.25 2.25 0 1 0-1.5 0v.878a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 4.5 6.25zm6.75-.872a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5m-3 8.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0",
+  trophy:
+    "M2.5.5A.5.5 0 0 1 3 0h10a.5.5 0 0 1 .5.5q0 .807-.034 1.536a3 3 0 1 1-1.133 5.89c-.79 1.865-1.878 2.777-2.833 3.011v2.173l1.425.356c.183.046.348.158.468.346l.011.013q.046.066.077.142a1 1 0 0 1 .057.487l-.002.024a1 1 0 0 1-.013.083c0 .002 0 .003-.002.004l-.005.02-.001.005-.003.012H3.456l-.003-.012-.005-.02-.002-.009a1 1 0 0 1-.013-.083l-.002-.024a1 1 0 0 1 .057-.487q.03-.076.077-.142l.011-.013c.12-.188.285-.3.468-.346L5.5 13.11v-2.173c-.955-.234-2.043-1.146-2.833-3.012a3 3 0 1 1-1.132-5.89A33 33 0 0 1 1.5.5zm.099 2.54a2 2 0 0 0 .72 3.935c-.333-1.05-.588-2.346-.72-3.935m10.083 3.935a2 2 0 0 0 .72-3.935c-.133 1.59-.388 2.885-.72 3.935",
 };
 
 // An inline 16x16 icon glyph positioned at (x, y) with a given fill.
@@ -81,37 +85,78 @@ export function icon(name: string, x: number, y: number, fill: string, size = 16
   return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 16 16" fill="${fill}"><path d="${d}"/></svg>`;
 }
 
-// Outer card frame (rounded rect + border) plus a shared <style> block and a
-// soft fade-in. Returns [open, close] so callers fill the body in between.
-export function frame(
-  width: number,
-  height: number,
-  theme: { bg: string; border: string },
-  extraStyle = ""
-): [string, string] {
-  const open = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg" role="img">
-<style>
-  .card-title{font:600 18px ${FONT};}
+// Shared <defs>: an accent gradient (title→accent), a soft glow filter, and a
+// subtle corner glow used as a background wash. IDs are document-scoped — each
+// card is its own SVG document (loaded via <img>), so fixed IDs never clash.
+export function defs(t: CardTheme): string {
+  return `<defs>
+  <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="${t.title}"/>
+    <stop offset="1" stop-color="${t.accent}"/>
+  </linearGradient>
+  <radialGradient id="wash" cx="0.85" cy="0.1" r="0.9">
+    <stop offset="0" stop-color="${t.accent}" stop-opacity="0.14"/>
+    <stop offset="1" stop-color="${t.accent}" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="3" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>`;
+}
+
+// Shared style block: fonts + staggered reveal animations. Animations run when
+// the SVG is loaded via <img> (as on GitHub); static fallback is the end state.
+function styleBlock(extra = ""): string {
+  return `<style>
+  .title{font:700 18px ${FONT};}
   .label{font:400 14px ${FONT};}
   .stat{font:700 15px ${FONT};}
   .big{font:800 28px ${FONT};}
+  .huge{font:800 38px ${FONT};}
   .sub{font:400 11px ${FONT};}
-  .fade{opacity:0;animation:fade .8s ease forwards;}
-  .fade2{opacity:0;animation:fade .8s ease .15s forwards;}
-  .fade3{opacity:0;animation:fade .8s ease .3s forwards;}
-  @keyframes fade{to{opacity:1;}}
-  ${extraStyle}
-</style>
-<rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="10" fill="${theme.bg}" stroke="${theme.border}"/>`;
+  .r1{animation:rise .6s ease both;}
+  .r2{animation:rise .6s ease .12s both;}
+  .r3{animation:rise .6s ease .24s both;}
+  .r4{animation:rise .6s ease .36s both;}
+  .r5{animation:rise .6s ease .48s both;}
+  .pop{animation:pop .5s cubic-bezier(.2,.8,.3,1.2) both;}
+  @keyframes rise{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
+  @keyframes pop{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
+  ${extra}
+</style>`;
+}
+
+// Outer card frame: background, corner wash, top accent bar, border, defs +
+// style. Returns [open, close] so callers fill the body in between.
+export function frame(
+  width: number,
+  height: number,
+  t: CardTheme,
+  extraStyle = ""
+): [string, string] {
+  const open = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg" role="img">
+${defs(t)}
+${styleBlock(extraStyle)}
+<rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="12" fill="${t.bg}" stroke="${t.border}"/>
+<rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="12" fill="url(#wash)"/>
+<rect x="14" y="0" width="${width - 28}" height="3" rx="1.5" fill="url(#accent)"/>`;
   return [open, `</svg>`];
 }
 
 // A small standalone error card so a broken username never shows a broken image.
 export function errorCard(message: string): string {
-  const theme = { bg: "#0d1117", border: "#30363d" };
-  const [open, close] = frame(440, 90, theme);
+  const t: CardTheme = {
+    title: "#f85149",
+    icon: "#f85149",
+    text: "#8b949e",
+    bg: "#0d1117",
+    border: "#30363d",
+    accent: "#f85149",
+  };
+  const [open, close] = frame(440, 90, t);
   return `${open}
-  <text x="24" y="42" class="card-title" fill="#f85149">Couldn’t build this card</text>
-  <text x="24" y="66" class="label" fill="#8b949e">${escapeXml(message)}</text>
+  <text x="24" y="44" class="title" fill="#f85149">Couldn’t build this card</text>
+  <text x="24" y="68" class="label" fill="#8b949e">${escapeXml(message)}</text>
   ${close}`;
 }
