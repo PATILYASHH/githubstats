@@ -1,7 +1,7 @@
 import type { GithubStats } from "../types";
-import { getAchievements, ICON_EMOJI, RARITY_COLORS, type Rarity } from "../achievements";
+import { getAchievements, RARITY_COLORS, type Rarity } from "../achievements";
 import { cardTheme, type CardTheme } from "./theme";
-import { escapeXml, frame, truncate } from "./svg";
+import { escapeXml, frame, icon, ICONS, truncate } from "./svg";
 
 const RARITIES: Rarity[] = ["common", "rare", "epic", "legendary"];
 
@@ -58,7 +58,7 @@ export function renderTrophyCard(
 
       const ring = RARITY_COLORS[a.rarity].ring;
       const glow = RARITY_COLORS[a.rarity].glow;
-      const emoji = ICON_EMOJI[a.icon] ?? "🏅";
+      const iconName = ICONS[a.icon] ? a.icon : "trophy";
       const title = truncate(a.title, 11, cellW - 20, true);
       const pct = Math.min(99, Math.round((a.current / a.target) * 100));
       const tier = a.unlocked ? a.rarity.toUpperCase() : `${pct}%`;
@@ -67,8 +67,13 @@ export function renderTrophyCard(
       const shineDelay = (0.6 + i * 0.25).toFixed(2);
       const ribW = Math.max(44, tier.length * 8 + 16);
 
-      // Unlocked extras: floating emoji + a sweeping shimmer. Locked: a padlock.
-      const emojiCls = a.unlocked ? ' class="float"' : "";
+      // Vector glyph — emoji don't render in <img>-loaded SVGs (GitHub, preview),
+      // so we embed icon paths like the other cards. Unlocked glyphs float +
+      // shimmer; locked ones are dimmed with a padlock badge.
+      const glyph = 30;
+      const glyphMarkup = a.unlocked
+        ? `<g class="float">${icon(iconName, lx - glyph / 2, cy - glyph / 2, ring, glyph)}</g>`
+        : icon(iconName, lx - glyph / 2, cy - glyph / 2, ring, glyph);
       const shimmer = a.unlocked
         ? `<g clip-path="url(#discClip)"><g style="animation:shine 3.2s ease-in-out ${shineDelay}s infinite"><rect x="${
             lx - 56
@@ -76,7 +81,13 @@ export function renderTrophyCard(
         : "";
       const lock = a.unlocked
         ? ""
-        : `<text x="${lx + 19}" y="${cy + 23}" text-anchor="middle" font-size="14">🔒</text>`;
+        : `<circle cx="${lx + 16}" cy="${cy + 12}" r="9" fill="${t.bg}" stroke="${ring}" stroke-width="1"/>${icon(
+            "lock",
+            lx + 10,
+            cy + 6,
+            ring,
+            12
+          )}`;
 
       return `<g transform="translate(${gx} ${gy})" opacity="${a.unlocked ? 1 : 0.5}">
     <g class="pop" style="animation-delay:${popDelay}s">
@@ -84,9 +95,9 @@ export function renderTrophyCard(
       <circle cx="${lx}" cy="${cy}" r="34" fill="${t.bg}" stroke="${ring}" stroke-width="2.5" style="filter:drop-shadow(0 0 7px ${glow})"/>
       <circle cx="${lx}" cy="${cy}" r="33" fill="url(#d-${a.rarity})"/>
       <ellipse cx="${lx}" cy="${cy - 15}" rx="22" ry="10" fill="#ffffff" opacity="0.10"/>
-      <text x="${lx}" y="${cy + 10}" text-anchor="middle" font-size="30"${emojiCls}>${emoji}</text>
-      ${lock}
+      ${glyphMarkup}
       ${shimmer}
+      ${lock}
       <rect x="${lx - ribW / 2}" y="${cy + 30}" width="${ribW}" height="19" rx="9.5" fill="${ring}" fill-opacity="${
         a.unlocked ? 0.92 : 0.22
       }" stroke="${ring}" stroke-width="1"/>
@@ -101,7 +112,8 @@ export function renderTrophyCard(
 
   return `${open}
   ${cardDefs}
-  <text x="20" y="33" class="title" fill="url(#accent)">🏆 Trophy Case</text>
+  ${icon("trophy", 20, 18, t.title, 18)}
+  <text x="44" y="33" class="title" fill="url(#accent)">Trophy Case</text>
   <text x="${W - 20}" y="33" text-anchor="end" class="stat" fill="${t.text}">${unlockedCount} unlocked</text>
   ${medals}
 ${close}`;
