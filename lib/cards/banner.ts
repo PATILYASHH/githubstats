@@ -47,7 +47,7 @@ export function renderBanner(
     <style>
       .nm{font:800 44px ${FONT};fill:#fff;}
       .sub{font:600 20px ${FONT};fill:#fff;}
-      /* 'both' (not a hidden base) so text stays visible if <style> is stripped */
+      /* 'both' (not a hidden base) so text stays visible if styles are stripped */
       .fade{animation:fi .9s ease .2s both;}
       .fade2{animation:fi .9s ease .45s both;}
       @keyframes fi{from{opacity:0;}to{opacity:1;}}

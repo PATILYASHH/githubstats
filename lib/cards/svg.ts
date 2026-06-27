@@ -107,6 +107,12 @@ export function defs(t: CardTheme): string {
 
 // Shared style block: fonts + staggered reveal animations. Animations run when
 // the SVG is loaded via <img> (as on GitHub); static fallback is the end state.
+//
+// NOTE: scale/rotate animations on SVG elements MUST set
+// `transform-box:fill-box;transform-origin:center` or the browser scales them
+// from the SVG's (0,0) origin — they'd fly in from the top-left corner instead
+// of popping in place. Translate-only animations (rise/float/sweep) are origin-
+// independent and don't need it.
 function styleBlock(extra = ""): string {
   return `<style>
   .title{font:700 18px ${FONT};}
@@ -120,9 +126,16 @@ function styleBlock(extra = ""): string {
   .r3{animation:rise .6s ease .24s both;}
   .r4{animation:rise .6s ease .36s both;}
   .r5{animation:rise .6s ease .48s both;}
-  .pop{animation:pop .5s cubic-bezier(.2,.8,.3,1.2) both;}
+  .pop{animation:pop .55s cubic-bezier(.2,.8,.3,1.25) both;transform-box:fill-box;transform-origin:center;}
+  .float{animation:float 3s ease-in-out infinite;}
+  .pulse{animation:pulse 2.6s ease-in-out infinite;}
+  .cardshine{animation:sweep 1.6s ease-out .25s both;}
   @keyframes rise{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
-  @keyframes pop{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
+  @keyframes pop{from{opacity:0;transform:scale(.55);}to{opacity:1;transform:scale(1);}}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+  @keyframes pulse{0%,100%{opacity:.35;}50%{opacity:.8;}}
+  @keyframes shine{0%{transform:translateX(0);}45%{transform:translateX(92px);}100%{transform:translateX(92px);}}
+  @keyframes sweep{from{transform:translateX(0);}to{transform:translateX(1100px);}}
   ${extra}
 </style>`;
 }
@@ -138,9 +151,11 @@ export function frame(
   const open = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg" role="img">
 ${defs(t)}
 ${styleBlock(extraStyle)}
+<clipPath id="cardClip"><rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="12"/></clipPath>
 <rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="12" fill="${t.bg}" stroke="${t.border}"/>
 <rect x="0.5" y="0.5" width="${width - 1}" height="${height - 1}" rx="12" fill="url(#wash)"/>
-<rect x="14" y="0" width="${width - 28}" height="3" rx="1.5" fill="url(#accent)"/>`;
+<rect x="14" y="0" width="${width - 28}" height="3" rx="1.5" fill="url(#accent)"/>
+<g clip-path="url(#cardClip)"><g class="cardshine"><rect x="-170" y="0" width="110" height="${height}" fill="#ffffff" opacity="0.07" transform="skewX(-18)"/></g></g>`;
   return [open, `</svg>`];
 }
 
