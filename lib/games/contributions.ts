@@ -82,3 +82,27 @@ export function sumInRange(days: Day[], start: string, end: string): number {
   }
   return sum;
 }
+
+// Total contributions in a calendar year (e.g. 2026).
+export function sumCalendarYear(days: Day[], year: number): number {
+  const prefix = `${year}-`;
+  let sum = 0;
+  for (const d of days) if (d.date.startsWith(prefix)) sum += d.count;
+  return sum;
+}
+
+// Monthly contribution buckets for a single calendar year, months 1..12.
+// Months with no activity are included as 0 so the rollup is deterministic.
+export function monthlyBuckets(
+  days: Day[],
+  year: number
+): { year: number; month: number; count: number }[] {
+  const counts = new Array(12).fill(0);
+  const prefix = `${year}-`;
+  for (const d of days) {
+    if (!d.date.startsWith(prefix)) continue;
+    const month = Number(d.date.slice(5, 7)); // 1..12
+    if (month >= 1 && month <= 12) counts[month - 1] += d.count;
+  }
+  return counts.map((count, i) => ({ year, month: i + 1, count }));
+}

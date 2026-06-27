@@ -41,8 +41,8 @@ const GAMES: GameCard[] = [
   {
     href: "/games/league",
     icon: "trophy-fill",
-    title: "Global League",
-    desc: "The default league: every signed-in developer ranked against each other by contributions this season.",
+    title: "Rankings",
+    desc: "Climb the leaderboard globally, in your country or your city — over this month, this year or all-time.",
     status: "live",
   },
   {

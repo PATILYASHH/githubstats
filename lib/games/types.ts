@@ -18,7 +18,26 @@ export interface UserStats {
   contributions_year: number;
   streak_current: number;
   streak_longest: number;
+  city: string | null;
+  country: string | null;
   updated_at: string;
+}
+
+// Leaderboard dimensions (mirrors the leaderboard() SQL function).
+export type LeaderPeriod = "month" | "year" | "all";
+export type LeaderScope = "global" | "country" | "city";
+
+// A row returned by the leaderboard() RPC.
+export interface LeaderboardRow {
+  user_id: string;
+  github_login: string;
+  avatar_url: string | null;
+  city: string | null;
+  country: string | null;
+  score: number;
+  all_time: number;
+  streak_current: number;
+  streak_longest: number;
 }
 
 export type DuelStatus =
