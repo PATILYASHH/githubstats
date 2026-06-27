@@ -19,6 +19,7 @@ import {
   type ReadmeOptions,
 } from "@/lib/readme";
 import { createClient } from "@/lib/supabase/client";
+import { colorForLanguage, LANGUAGE_COLORS } from "@/lib/colors";
 import { BIcon } from "./icons";
 import MarkdownPreview from "./MarkdownPreview";
 
@@ -29,9 +30,9 @@ interface Toggle {
 
 type Field = { key: keyof ReadmeOptions; label: string; placeholder: string };
 
-// Personal intro details (feed the About section + banner).
+// Personal intro details (feed the About section). The headline lives in its
+// own "Headline" panel — kept separate so nothing is entered twice.
 const DETAILS: Field[] = [
-  { key: "role", label: "Role / headline", placeholder: "Full-Stack Developer" },
   { key: "currentlyLearning", label: "Currently learning", placeholder: "Rust, k8s" },
   { key: "collaborateOn", label: "Looking to collaborate on", placeholder: "open-source AI tools" },
   { key: "askMeAbout", label: "Ask me about", placeholder: "React, Node, Tally" },
@@ -238,12 +239,12 @@ export default function ReadmeGenerator() {
               </div>
             </Panel>
 
-            <Panel title="Tagline">
+            <Panel title="Headline">
               <input
                 className="readme-input"
                 value={opts.tagline}
                 onChange={(e) => set("tagline", e.target.value)}
-                placeholder="A short headline"
+                placeholder="A short headline or tagline"
               />
             </Panel>
 
@@ -265,6 +266,15 @@ export default function ReadmeGenerator() {
                 ))}
               </div>
             </Panel>
+
+            {getTemplate(opts.template).order.includes("tech") && (
+              <Panel title="Tech stack">
+                <TechStackEditor
+                  value={opts.techStack}
+                  onChange={(v) => set("techStack", v)}
+                />
+              </Panel>
+            )}
 
             <Panel title="Sections">
               <div className="readme-toggles">
@@ -358,6 +368,107 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
     <div className="readme-panel">
       <h3 className="readme-panel-title">{title}</h3>
       {children}
+    </div>
+  );
+}
+
+// Tech-stack picker: removable chips for the current stack, a free-text add for
+// anything, and a palette of known languages (colored) that aren't added yet.
+const KNOWN_LANGS = Object.keys(LANGUAGE_COLORS).sort((a, b) =>
+  a.localeCompare(b)
+);
+
+function TechStackEditor({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [custom, setCustom] = useState("");
+
+  const has = (name: string) =>
+    value.some((v) => v.toLowerCase() === name.toLowerCase());
+  const available = useMemo(
+    () => KNOWN_LANGS.filter((k) => !has(k)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [value]
+  );
+
+  function add(name: string) {
+    const n = name.trim();
+    if (!n || has(n)) return;
+    onChange([...value, n]);
+  }
+  function remove(name: string) {
+    onChange(value.filter((v) => v !== name));
+  }
+  function addCustom(e: FormEvent) {
+    e.preventDefault();
+    add(custom);
+    setCustom("");
+  }
+
+  return (
+    <div className="tech-editor">
+      {value.length > 0 ? (
+        <div className="tech-selected">
+          {value.map((name) => (
+            <button
+              type="button"
+              key={name}
+              className="tech-tag"
+              onClick={() => remove(name)}
+              title={`Remove ${name}`}
+            >
+              <span
+                className="tech-dot"
+                style={{ backgroundColor: colorForLanguage(name) }}
+              />
+              {name}
+              <BIcon name="x" size={14} />
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="tech-empty">No tech added yet — pick from below.</p>
+      )}
+
+      <form className="tech-add" onSubmit={addCustom}>
+        <input
+          className="readme-input"
+          value={custom}
+          onChange={(e) => setCustom(e.target.value)}
+          placeholder="Add a language or tool…"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label="Add a language or tool"
+        />
+        <button type="submit" className="tech-add-btn">
+          Add
+        </button>
+      </form>
+
+      {available.length > 0 && (
+        <div className="tech-palette">
+          {available.map((name) => (
+            <button
+              type="button"
+              key={name}
+              className="tech-chip"
+              onClick={() => add(name)}
+              title={`Add ${name}`}
+            >
+              <span
+                className="tech-dot"
+                style={{ backgroundColor: colorForLanguage(name) }}
+              />
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

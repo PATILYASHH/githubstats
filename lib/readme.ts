@@ -30,7 +30,6 @@ export interface ReadmeOptions {
   template: string;
   theme: string;
   tagline: string;
-  role: string;
   animatedHeader: boolean;
   showAbout: boolean;
   showTechStack: boolean;
@@ -40,6 +39,8 @@ export interface ReadmeOptions {
   showTrophies: boolean;
   showActivity: boolean;
   showFeatured: boolean;
+  // Tech stack shown as badges — editable (detected languages + anything added).
+  techStack: string[];
   // Intro details (GitHub default-template style).
   currentlyLearning: string;
   collaborateOn: string;
@@ -233,12 +234,12 @@ export interface TechBadge {
   url: string;
 }
 
-export function techBadges(base: string, stats: GithubStats): TechBadge[] {
-  return stats.languages.map((l) => ({
-    name: l.name,
+export function techBadges(base: string, techStack: string[]): TechBadge[] {
+  return techStack.map((name) => ({
+    name,
     url: badgeUrl(base, {
-      message: l.name,
-      color: colorForLanguage(l.name).replace(/^#/, ""),
+      message: name,
+      color: colorForLanguage(name).replace(/^#/, ""),
     }),
   }));
 }
@@ -385,8 +386,9 @@ export function aboutItems(stats: GithubStats, opts: ReadmeOptions): AboutItem[]
   if (opts.askMeAbout.trim()) {
     items.push({ emoji: "💬", label: "Ask me about", value: opts.askMeAbout.trim() });
   }
+  // Skip when the Tech Stack section is shown — it would just repeat the badges.
   const langs = stats.languages.slice(0, 3).map((l) => l.name);
-  if (langs.length) {
+  if (langs.length && !opts.showTechStack) {
     items.push({ emoji: "🧰", label: "I work mostly with", value: langs.join(", ") });
   }
   if (stats.user.location) {
@@ -454,7 +456,6 @@ export function defaultReadmeOptions(stats: GithubStats): ReadmeOptions {
     template: "comprehensive",
     theme: "tokyonight",
     tagline: stats.user.bio?.trim() || `${stats.rank.title} · ${stats.rank.blurb}`,
-    role: "",
     animatedHeader: false,
     showAbout: true,
     showTechStack: stats.languages.length > 0,
@@ -464,6 +465,7 @@ export function defaultReadmeOptions(stats: GithubStats): ReadmeOptions {
     showTrophies: true,
     showActivity: true,
     showFeatured: stats.topRepos.items.length > 0,
+    techStack: stats.languages.map((l) => l.name),
     currentlyLearning: "",
     collaborateOn: "",
     askMeAbout: "",
@@ -496,8 +498,10 @@ export function optionsForTemplate(
     ...prev,
     ...tpl.defaults,
     template: tpl.id,
+    // Preserve the user's edited tech stack across template switches.
+    techStack: prev.techStack,
     // Don't enable sections we have no data for.
-    showTechStack: Boolean(tpl.defaults.showTechStack) && hasLangs,
+    showTechStack: Boolean(tpl.defaults.showTechStack) && prev.techStack.length > 0,
     showTopLangs: Boolean(tpl.defaults.showTopLangs) && hasLangs,
     showFeatured: Boolean(tpl.defaults.showFeatured) && hasRepos,
   };
@@ -525,7 +529,7 @@ function center(lines: string[]): string[] {
 function renderHeader(ctx: Ctx): string[] {
   const { opts, base, u, name, tpl } = ctx;
   const lines: string[] = [];
-  const subtitle = opts.role.trim() || opts.tagline.trim();
+  const subtitle = opts.tagline.trim();
 
   if (tpl.headerStyle === "banner") {
     // The banner already carries the name + subtitle.
@@ -569,7 +573,7 @@ function renderAbout(ctx: Ctx): string[] {
     if (stats.user.location) bits.push(`based in ${esc(stats.user.location)}`);
     if (stats.user.company) bits.push(`at ${esc(stats.user.company)}`);
     let para = bits.join(" ") + ".";
-    if (langs) para += ` I work mostly with ${esc(langs)}.`;
+    if (langs && !opts.showTechStack) para += ` I work mostly with ${esc(langs)}.`;
     if (featured) para += ` Currently building **${esc(featured)}**.`;
     para += ` ${fmt(stats.contributions.total)} contributions and a ${
       stats.contributions.longestStreak
@@ -588,9 +592,9 @@ function renderAbout(ctx: Ctx): string[] {
 }
 
 function renderTech(ctx: Ctx): string[] {
-  const { stats, opts, base, tpl } = ctx;
+  const { opts, base, tpl } = ctx;
   if (!opts.showTechStack) return [];
-  const badges = techBadges(base, stats);
+  const badges = techBadges(base, opts.techStack);
   if (!badges.length) return [];
   const body = [
     `## 🛠️ Tech Stack`,
