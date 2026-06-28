@@ -6,9 +6,12 @@ import { LEVEL_COLORS } from "@/lib/colors";
 export default function MiniHeatmap({
   days,
   weeks = 30,
+  cell,
 }: {
   days: ContribDay[];
   weeks?: number;
+  // Override the cell size (px). Lets a full ~53-week year fit the card width.
+  cell?: number;
 }) {
   if (days.length === 0) return null;
 
@@ -19,20 +22,23 @@ export default function MiniHeatmap({
     ...recent,
   ];
 
+  const gridStyle = cell ? { gridTemplateRows: `repeat(7, ${cell}px)` } : undefined;
+  const cellStyle = cell ? { width: cell, height: cell } : undefined;
+
   return (
-    <div className="mini-heatmap">
+    <div className="mini-heatmap" style={gridStyle}>
       {cells.map((d, i) =>
         d ? (
           <span
             key={d.date}
             className="mini-cell"
-            style={{ backgroundColor: LEVEL_COLORS[d.level] }}
+            style={{ backgroundColor: LEVEL_COLORS[d.level], ...cellStyle }}
           />
         ) : (
           <span
             key={`p-${i}`}
             className="mini-cell"
-            style={{ backgroundColor: "transparent" }}
+            style={{ backgroundColor: "transparent", ...cellStyle }}
           />
         )
       )}

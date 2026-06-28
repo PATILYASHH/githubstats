@@ -1445,6 +1445,22 @@ a:hover {
   color: var(--text);
   background: var(--bg);
 }
+.modal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-muted);
+}
+.modal-toolbar-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.modal-toolbar .year-select {
+  min-width: 130px;
+}
 .modal-body {
   padding: 18px;
   overflow-y: auto;
@@ -1569,6 +1585,36 @@ a:hover {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+.showcase-period {
+  margin-top: 22px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #c9d1d9;
+}
+.showcase-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+.showcase-hl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #e6edf3;
+}
+.showcase-hl-ico {
+  font-size: 16px;
+  line-height: 1;
+}
+.showcase-hl-text b {
+  font-weight: 800;
+}
+.showcase-hl-dim {
+  color: var(--text-muted);
 }
 .showcase-heatmap {
   display: flex;

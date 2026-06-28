@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import type { GithubStats } from "@/lib/types";
 import { getAchievements, RARITY_COLORS } from "@/lib/achievements";
+import { availableYears, computeYearStats, ALL_TIME } from "@/lib/yearStats";
 import MiniHeatmap from "./MiniHeatmap";
 import { getIcon, DownloadIcon, ShareIcon, CloseIcon } from "./icons";
 
 function fmt(n: number) {
   return n.toLocaleString("en-US");
+}
+
+function shortDay(iso: string) {
+  return new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export default function CreateCardModal({
@@ -23,22 +31,39 @@ export default function CreateCardModal({
   const [error, setError] = useState(false);
 
   const { user, contributions: c, rank } = stats;
-  const activePct =
-    c.trackedDays > 0 ? Math.round((c.activeDays / c.trackedDays) * 100) : 0;
   const badges = getAchievements(stats).filter((a) => a.unlocked).slice(0, 12);
 
-  const STATS = [
-    { v: fmt(c.total), l: "contributions" },
-    { v: `${c.longestStreak}d`, l: "longest streak" },
-    { v: `${activePct}%`, l: "active days" },
-    { v: fmt(stats.totalStars), l: "stars" },
-    { v: fmt(user.followers), l: "followers" },
-    { v: fmt(user.publicRepos), l: "repos" },
-  ];
+  // Year picker — defaults to the most recent year so the card opens on the
+  // current year's streak report, with an "All time" fallback.
+  const years = useMemo(() => availableYears(c.days), [c.days]);
+  const [scope, setScope] = useState<string>(years[0] ?? ALL_TIME);
+  const ys = useMemo(() => computeYearStats(c.days, scope), [c.days, scope]);
 
-  // Render the hidden card to a PNG once it's mounted.
+  const STATS = ys.isAll
+    ? [
+        { v: fmt(ys.total), l: "contributions" },
+        { v: `${ys.longestStreak}d`, l: "longest streak" },
+        { v: `${ys.activePct}%`, l: "active rate" },
+        { v: fmt(stats.totalStars), l: "stars" },
+        { v: fmt(user.followers), l: "followers" },
+        { v: fmt(user.publicRepos), l: "repos" },
+      ]
+    : [
+        { v: fmt(ys.total), l: "contributions" },
+        { v: `${ys.longestStreak}d`, l: "biggest streak" },
+        { v: `${ys.activePct}%`, l: "active rate" },
+        { v: fmt(ys.activeDays), l: "active days" },
+        { v: `${ys.busiestDay?.count ?? 0}`, l: "best day" },
+        ys.isCurrentYear
+          ? { v: `${ys.currentStreak}d`, l: "current streak" }
+          : { v: `${ys.avgPerActiveDay}`, l: "avg / active day" },
+      ];
+
+  // Render the hidden card to a PNG once it's mounted (and on every year change).
   useEffect(() => {
     let active = true;
+    setImg(null);
+    setError(false);
     const gen = async () => {
       if (!cardRef.current) return;
       try {
@@ -69,7 +94,7 @@ export default function CreateCardModal({
       active = false;
       clearTimeout(t);
     };
-  }, []);
+  }, [scope]);
 
   // Close on Escape.
   useEffect(() => {
@@ -78,7 +103,7 @@ export default function CreateCardModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const filename = `${user.login}-githubstats-card.png`;
+  const filename = `${user.login}-githubstats-${ys.isAll ? "all-time" : ys.year}-card.png`;
 
   function download() {
     if (!img) return;
@@ -101,7 +126,7 @@ export default function CreateCardModal({
       if (navAny.share && navAny.canShare && navAny.canShare({ files: [file] })) {
         await navAny.share({
           files: [file],
-          title: `${user.login}'s GitHub card`,
+          title: `${user.login}'s GitHub ${ys.isAll ? "stats" : `${ys.year} streak`} card`,
           text: "Made with githubstatss.vercel.app",
         });
         return;
@@ -121,6 +146,28 @@ export default function CreateCardModal({
             <CloseIcon size={16} />
           </button>
         </div>
+
+        {years.length > 0 && (
+          <div className="modal-toolbar">
+            <label htmlFor="card-year" className="modal-toolbar-label">
+              📅 Period
+            </label>
+            <select
+              id="card-year"
+              className="year-select"
+              value={scope}
+              onChange={(e) => setScope(e.target.value)}
+              aria-label="Select year for the card"
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+              <option value={ALL_TIME}>All time</option>
+            </select>
+          </div>
+        )}
 
         <div className="modal-body">
           {error ? (
@@ -170,6 +217,12 @@ export default function CreateCardModal({
             </div>
           </div>
 
+          <div className="showcase-period">
+            {ys.isAll
+              ? "📊 All-time stats"
+              : `🔥 ${ys.year} streak report${ys.isCurrentYear ? " · year to date" : ""}`}
+          </div>
+
           <div className="showcase-stats">
             {STATS.map((s) => (
               <div className="showcase-stat" key={s.l}>
@@ -180,10 +233,49 @@ export default function CreateCardModal({
           </div>
 
           <div className="showcase-heatmap">
-            <MiniHeatmap days={c.days} weeks={32} />
+            <MiniHeatmap
+              days={ys.days}
+              weeks={ys.isAll ? 32 : 53}
+              cell={ys.isAll ? undefined : 8}
+            />
           </div>
 
-          {badges.length > 0 && (
+          {!ys.isAll && (
+            <div className="showcase-highlights">
+              <div className="showcase-hl">
+                <span className="showcase-hl-ico">🔥</span>
+                <span className="showcase-hl-text">
+                  <b>{ys.longestStreak}-day</b> biggest streak
+                  {ys.longestStart && ys.longestEnd && (
+                    <span className="showcase-hl-dim">
+                      {" "}
+                      · {shortDay(ys.longestStart)} – {shortDay(ys.longestEnd)}
+                    </span>
+                  )}
+                </span>
+              </div>
+              {ys.bestMonth && (
+                <div className="showcase-hl">
+                  <span className="showcase-hl-ico">📈</span>
+                  <span className="showcase-hl-text">
+                    <b>{ys.bestMonth.label}</b> was the busiest month
+                    <span className="showcase-hl-dim"> · {fmt(ys.bestMonth.count)} contributions</span>
+                  </span>
+                </div>
+              )}
+              {ys.busiestDay && (
+                <div className="showcase-hl">
+                  <span className="showcase-hl-ico">⭐</span>
+                  <span className="showcase-hl-text">
+                    <b>{ys.busiestDay.count}</b> on the best day
+                    <span className="showcase-hl-dim"> · {shortDay(ys.busiestDay.date)}</span>
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {ys.isAll && badges.length > 0 && (
             <>
               <div className="showcase-badges-title">
                 🏅 {badges.length} achievement{badges.length === 1 ? "" : "s"} unlocked
