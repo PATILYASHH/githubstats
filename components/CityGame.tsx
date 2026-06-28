@@ -12,6 +12,7 @@ import {
   STORE,
   STORE_MAP,
   PLOT_SIZE,
+  MAX_BUILD_HEIGHT,
   layoutCost,
   type Layout,
 } from "@/lib/games/store";
@@ -129,22 +130,40 @@ export default function CityGame({
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.08;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
-
-    scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x4a5a3a, 0.95));
-    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.9);
-    sun.position.set(40, 70, 20);
-    scene.add(sun);
 
     const groundW = spanX + PITCH * 2;
     const groundD = spanZ + PITCH * 2;
+
+    scene.add(new THREE.HemisphereLight(0xbfe0ff, 0x47502f, 0.85));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+    const sun = new THREE.DirectionalLight(0xfff4e0, 1.15);
+    sun.position.set(60, 120, 40);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    const shadowR = Math.max(groundW, groundD) / 2 + 24;
+    const sc = sun.shadow.camera as THREE.OrthographicCamera;
+    sc.left = -shadowR;
+    sc.right = shadowR;
+    sc.top = shadowR;
+    sc.bottom = -shadowR;
+    sc.near = 10;
+    sc.far = 420;
+    sc.updateProjectionMatrix();
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.45;
+    scene.add(sun);
+    scene.add(sun.target);
+
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(groundW, groundD),
       new THREE.MeshStandardMaterial({ color: "#707070", flatShading: true })
     );
     ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
     scene.add(ground);
     const grid = new THREE.GridHelper(
       Math.max(groundW, groundD),
@@ -230,6 +249,8 @@ export default function CityGame({
     for (const [gw, gh, gd, px, py, pz] of wallSpecs) {
       const wall = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, gd), wallMat);
       wall.position.set(px, py, pz);
+      wall.castShadow = true;
+      wall.receiveShadow = true;
       scene.add(wall);
       walls.push(wall);
     }
@@ -268,16 +289,8 @@ export default function CityGame({
     }
     scene.add(clouds);
 
-    // interaction plane over my plot + highlight box
-    const interact = new THREE.Mesh(
-      new THREE.PlaneGeometry(PLOT_SIZE, PLOT_SIZE),
-      new THREE.MeshBasicMaterial({ visible: false })
-    );
-    interact.rotation.x = -Math.PI / 2;
-    interact.position.set(myOrigin.x, 0.05, myOrigin.z);
-    scene.add(interact);
-
-    const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+    // highlight box marking where the next block will land
+    const boxGeo = new THREE.BoxGeometry(1.02, 1.02, 1.02);
     const hl = new THREE.LineSegments(
       new THREE.EdgesGeometry(boxGeo),
       new THREE.LineBasicMaterial({ color: 0xffffff })
@@ -286,9 +299,16 @@ export default function CityGame({
     hl.visible = false;
     scene.add(hl);
 
+    const REACH = 8; // how far you can place/remove blocks (world units)
     const raycaster = new THREE.Raycaster();
+    raycaster.far = REACH;
     const centre = new THREE.Vector2(0, 0);
-    let target: { x: number; z: number } | null = null;
+    const half2 = PLOT_SIZE / 2;
+    const inPlot = (x: number, z: number) =>
+      x >= 0 && x < PLOT_SIZE && z >= 0 && z < PLOT_SIZE;
+    type Cell = { x: number; y: number; z: number };
+    let placeTarget: Cell | null = null; // empty cell a new block goes into
+    let removeTarget: Cell | null = null; // existing block under the crosshair
 
     function rebuildMine() {
       if (myGroup) {
@@ -345,11 +365,19 @@ export default function CityGame({
     const onClickCanvas = () => controls.lock();
     renderer.domElement.addEventListener("click", onClickCanvas);
 
+    const cellKey = (c: { x: number; y?: number; z: number }) =>
+      `${c.x},${c.y ?? 0},${c.z}`;
+
     function place() {
-      if (!canBuild || modeRef.current !== "edit" || bagRef.current || !target)
+      if (
+        !canBuild ||
+        modeRef.current !== "edit" ||
+        bagRef.current ||
+        !placeTarget
+      )
         return;
-      const key = `${target.x},${target.z}`;
-      if (layoutRef.current.some((p) => `${p.x},${p.z}` === key)) return;
+      const key = cellKey(placeTarget);
+      if (layoutRef.current.some((p) => cellKey(p) === key)) return;
       const item = STORE_MAP[hotbarRef.current[activeRef.current]];
       if (!item) return;
       const bal = budget - layoutCost(layoutRef.current);
@@ -359,19 +387,27 @@ export default function CityGame({
       }
       layoutRef.current = [
         ...layoutRef.current,
-        { item: item.id, x: target.x, z: target.z },
+        {
+          item: item.id,
+          x: placeTarget.x,
+          y: placeTarget.y,
+          z: placeTarget.z,
+        },
       ];
       rebuildMine();
       scheduleSave();
     }
     function remove() {
-      if (!canBuild || modeRef.current !== "edit" || bagRef.current || !target)
+      if (
+        !canBuild ||
+        modeRef.current !== "edit" ||
+        bagRef.current ||
+        !removeTarget
+      )
         return;
-      const key = `${target.x},${target.z}`;
-      if (!layoutRef.current.some((p) => `${p.x},${p.z}` === key)) return;
-      layoutRef.current = layoutRef.current.filter(
-        (p) => `${p.x},${p.z}` !== key
-      );
+      const key = cellKey(removeTarget);
+      if (!layoutRef.current.some((p) => cellKey(p) === key)) return;
+      layoutRef.current = layoutRef.current.filter((p) => cellKey(p) !== key);
       rebuildMine();
       scheduleSave();
     }
@@ -396,6 +432,8 @@ export default function CityGame({
     const keys: Record<string, boolean> = {};
     const onKeyDown = (e: KeyboardEvent) => {
       keys[e.code] = true;
+      // Stop Space from scrolling the page while flying in edit mode.
+      if (e.code === "Space" && controls.isLocked) e.preventDefault();
       if (e.code === "KeyB" && canBuild) {
         setBagOpen(false);
         setMode((m) => (m === "edit" ? "explore" : "edit"));
@@ -432,26 +470,58 @@ export default function CityGame({
         if (keys["KeyS"] || keys["ArrowDown"]) controls.moveForward(-sp);
         if (keys["KeyA"] || keys["ArrowLeft"]) controls.moveRight(-sp);
         if (keys["KeyD"] || keys["ArrowRight"]) controls.moveRight(sp);
-        camera.position.y = 1.7;
+        // Edit mode = creative flight so you can stack blocks all the way up.
+        if (modeRef.current === "edit" && !bagRef.current) {
+          const vsp = 7 * dt;
+          if (keys["Space"]) camera.position.y += vsp;
+          if (keys["ShiftLeft"] || keys["ControlLeft"]) camera.position.y -= vsp;
+          camera.position.y = Math.max(
+            1.7,
+            Math.min(MAX_BUILD_HEIGHT + 5, camera.position.y)
+          );
+        } else {
+          camera.position.y = 1.7;
+        }
         camera.position.x = Math.max(-limX, Math.min(limX, camera.position.x));
         camera.position.z = Math.max(-limZ, Math.min(limZ, camera.position.z));
       }
 
-      // target tile under crosshair (edit mode, on my plot)
-      target = null;
+      // raycast the build under the crosshair (edit mode, my plot only) to find
+      // where a new block stacks (placeTarget) and which block to remove.
+      placeTarget = null;
+      removeTarget = null;
       hl.visible = false;
-      if (canBuild && modeRef.current === "edit" && !bagRef.current) {
+      if (canBuild && modeRef.current === "edit" && !bagRef.current && myGroup) {
         raycaster.setFromCamera(centre, camera);
-        const hit = raycaster.intersectObject(interact)[0];
+        const hit = raycaster.intersectObjects(myGroup.children, false)[0];
         if (hit) {
-          const lx = Math.floor(hit.point.x - myOrigin.x + PLOT_SIZE / 2);
-          const lz = Math.floor(hit.point.z - myOrigin.z + PLOT_SIZE / 2);
-          if (lx >= 0 && lx < PLOT_SIZE && lz >= 0 && lz < PLOT_SIZE) {
-            target = { x: lx, z: lz };
+          const ud = hit.object.userData as {
+            ground?: boolean;
+            cell?: Cell;
+          };
+          if (ud.cell) {
+            // looking at a placed block: remove it, or stack against its face
+            removeTarget = { ...ud.cell };
+            const n = hit.face?.normal;
+            if (n) {
+              const tx = ud.cell.x + Math.round(n.x);
+              const ty = ud.cell.y + Math.round(n.y);
+              const tz = ud.cell.z + Math.round(n.z);
+              if (inPlot(tx, tz) && ty >= 0 && ty < MAX_BUILD_HEIGHT)
+                placeTarget = { x: tx, y: ty, z: tz };
+            }
+          } else if (ud.ground) {
+            // bare ground: place at level 0 on the tile under the crosshair
+            const lx = Math.floor(hit.point.x - myOrigin.x + half2);
+            const lz = Math.floor(hit.point.z - myOrigin.z + half2);
+            if (inPlot(lx, lz)) placeTarget = { x: lx, y: 0, z: lz };
+          }
+          const show = placeTarget ?? removeTarget;
+          if (show) {
             hl.position.set(
-              myOrigin.x + lx - PLOT_SIZE / 2 + 0.5,
-              0.5,
-              myOrigin.z + lz - PLOT_SIZE / 2 + 0.5
+              myOrigin.x + show.x - half2 + 0.5,
+              show.y + 0.5,
+              myOrigin.z + show.z - half2 + 0.5
             );
             hl.visible = true;
           }
@@ -514,7 +584,6 @@ export default function CityGame({
         s.material.map?.dispose();
         s.material.dispose();
       });
-      disposeGroup(interact);
       hl.geometry.dispose();
       (hl.material as THREE.Material).dispose();
       disposeGroup(ground);
@@ -579,8 +648,9 @@ export default function CityGame({
           </p>
           {mode === "edit" ? (
             <p>
-              WASD walk · <b>left-click</b> build · <b>right-click</b> remove ·
-              scroll/1-9 hotbar · <b>E</b> bag · <b>B</b> explore · Esc release
+              WASD walk · <b>Space/Shift</b> fly up/down · <b>left-click</b>{" "}
+              place (stacks on blocks) · <b>right-click</b> remove · scroll/1-9
+              hotbar · <b>E</b> bag · <b>B</b> explore · Esc release
             </p>
           ) : (
             <p>

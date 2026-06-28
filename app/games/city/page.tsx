@@ -6,7 +6,7 @@ import CityGameClient from "@/components/CityGameClient";
 import type { GamePlot } from "@/components/CityGame";
 import { BIcon } from "@/components/icons";
 import { sanitizeLayout, type Layout } from "@/lib/games/store";
-import { fetchDays, totalContributions } from "@/lib/games/contributions";
+import { availableCoins } from "@/lib/games/coins";
 
 export const metadata: Metadata = {
   title: "Git City — build & explore in first person",
@@ -46,22 +46,15 @@ export default async function CityGamePage() {
     if (!cityPlots.some((p) => p.mine)) {
       cityPlots.unshift({ login: myLogin, layout: [] as Layout, mine: true });
     }
-    // Coins = stored snapshot, else live contributions (works without the
-    // service-role key, so the game is playable before stats are populated).
+    // Coins follow LIVE contributions so today's commits immediately raise the
+    // balance (e.g. 1000 → 1040), never dropping below the stored snapshot.
+    // Live also means the game is playable before stats are populated.
     const { data: stats } = await supabase
       .from("user_stats")
       .select("contributions_total")
       .eq("user_id", user!.id)
       .maybeSingle();
-    if (stats?.contributions_total != null) {
-      budget = stats.contributions_total;
-    } else {
-      try {
-        budget = totalContributions(await fetchDays(myLogin));
-      } catch {
-        budget = 0;
-      }
-    }
+    budget = await availableCoins(myLogin, stats?.contributions_total ?? null);
   }
 
   // Pad to a 5-plot city with reserved plots.

@@ -69,6 +69,32 @@ function brick(THREE: typeof THREEType, base: string) {
   return toTex(THREE, c);
 }
 
+// Rough rounded stones over a dark mortar — cobblestone / gravel / mossy.
+function cobble(THREE: typeof THREEType, base: string, moss = false) {
+  const { c, ctx, S } = canvas();
+  ctx.fillStyle = shade(base, -0.28);
+  ctx.fillRect(0, 0, S, S);
+  const stones: [number, number, number, number][] = [
+    [0, 0, 7, 7],
+    [8, 0, 7, 5],
+    [8, 6, 7, 9],
+    [0, 8, 6, 7],
+    [5, 7, 4, 4],
+  ];
+  for (const [x, y, w, h] of stones) {
+    ctx.fillStyle = shade(base, (Math.random() * 2 - 1) * 0.14);
+    ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+  }
+  speckle(ctx, base, 0.12, S);
+  if (moss) {
+    for (let i = 0; i < 16; i++) {
+      ctx.fillStyle = shade("#3aa544", (Math.random() * 2 - 1) * 0.25);
+      ctx.fillRect((Math.random() * S) | 0, (Math.random() * S) | 0, 1, 1);
+    }
+  }
+  return toTex(THREE, c);
+}
+
 function planks(THREE: typeof THREEType, base: string, vertical = false) {
   const { c, ctx, S } = canvas();
   ctx.fillStyle = base;
@@ -78,6 +104,40 @@ function planks(THREE: typeof THREEType, base: string, vertical = false) {
   for (let i = 4; i < S; i += 4) {
     if (vertical) ctx.fillRect(i, 0, 1, S);
     else ctx.fillRect(0, i, S, 1);
+  }
+  return toTex(THREE, c);
+}
+
+// Sandstone / quartz: soft horizontal sediment banding.
+function layered(THREE: typeof THREEType, base: string) {
+  const { c, ctx, S } = canvas();
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, S, S);
+  speckle(ctx, base, 0.06, S);
+  ctx.fillStyle = shade(base, -0.1);
+  ctx.fillRect(0, 5, S, 1);
+  ctx.fillRect(0, 11, S, 1);
+  return toTex(THREE, c);
+}
+
+// Bookshelf: plank frame with two rows of coloured book spines.
+function bookshelf(THREE: typeof THREEType, base: string) {
+  const { c, ctx, S } = canvas();
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, S, S);
+  ctx.fillStyle = shade(base, -0.22);
+  ctx.fillRect(0, 0, S, 2);
+  ctx.fillRect(0, 7, S, 2);
+  ctx.fillRect(0, S - 2, S, 2);
+  const spines = ["#8a4b3a", "#3a6ea5", "#4a8a4a", "#b8954a", "#7a4a8a", "#b5483f"];
+  for (const y of [2, 9]) {
+    let x = 1;
+    while (x < S - 1) {
+      const w = 2 + ((Math.random() * 2) | 0);
+      ctx.fillStyle = spines[(Math.random() * spines.length) | 0];
+      ctx.fillRect(x, y, Math.min(w, S - 1 - x), 5);
+      x += w + 1;
+    }
   }
   return toTex(THREE, c);
 }
@@ -114,6 +174,10 @@ function grassSide(THREE: typeof THREEType) {
   return toTex(THREE, c);
 }
 
+const COBBLE_IDS = new Set(["cobblestone", "mossy_cobble", "gravel"]);
+const LAYERED_IDS = new Set(["sandstone", "quartz", "snow", "obsidian"]);
+const METAL_IDS = new Set(["gold", "diamond", "emerald"]);
+
 // Returns a Material (or 6-face array for grass) for a store item, cached.
 export function getBlockMaterial(
   THREE: typeof THREEType,
@@ -123,12 +187,16 @@ export function getBlockMaterial(
   if (hit) return hit;
 
   const transparent = item.opacity != null;
-  const common = {
-    roughness: 0.95,
-    metalness: item.id === "gold" || item.id === "diamond" ? 0.3 : 0.02,
+  const common: Record<string, unknown> = {
+    roughness: item.glow ? 0.6 : 0.95,
+    metalness: METAL_IDS.has(item.id) ? 0.35 : 0.02,
     transparent,
     opacity: item.opacity ?? 1,
   };
+  if (item.glow) {
+    common.emissive = new THREE.Color(item.glow);
+    common.emissiveIntensity = 0.9;
+  }
 
   let mat: THREEType.Material | THREEType.Material[];
 
@@ -139,14 +207,21 @@ export function getBlockMaterial(
     mat = [side, side, top, dirt, side, side]; // +x -x +y -y +z -z
   } else if (item.id === "brick") {
     mat = new THREE.MeshStandardMaterial({ map: brick(THREE, item.color), ...common });
+  } else if (COBBLE_IDS.has(item.id)) {
+    mat = new THREE.MeshStandardMaterial({
+      map: cobble(THREE, item.color, item.id === "mossy_cobble"),
+      ...common,
+    });
+  } else if (LAYERED_IDS.has(item.id)) {
+    mat = new THREE.MeshStandardMaterial({ map: layered(THREE, item.color), ...common });
+  } else if (item.id === "bookshelf") {
+    mat = new THREE.MeshStandardMaterial({ map: bookshelf(THREE, item.color), ...common });
   } else if (item.id === "planks" || item.id === "door" || item.id === "floor") {
     mat = new THREE.MeshStandardMaterial({ map: planks(THREE, item.color), ...common });
   } else if (item.id === "log") {
     mat = new THREE.MeshStandardMaterial({ map: planks(THREE, item.color, true), ...common });
-  } else if (item.id === "glass" || item.id === "window") {
+  } else if (item.id === "glass" || item.id === "window" || item.id === "ice") {
     mat = new THREE.MeshStandardMaterial({ map: pane(THREE, item.color, item.id === "window"), ...common });
-  } else if (item.id === "water") {
-    mat = new THREE.MeshStandardMaterial({ map: noise(THREE, item.color, 0.12), ...common });
   } else {
     mat = new THREE.MeshStandardMaterial({ map: noise(THREE, item.color, 0.12), ...common });
   }

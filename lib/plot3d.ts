@@ -4,6 +4,9 @@ import { getBlockMaterial, getPlatformMaterial } from "@/lib/blockTextures";
 
 // Build a THREE.Group for one plot: a grass platform plus textured, blocky
 // Minecraft cubes for each placed item (trees render as a trunk + leaf canopy).
+// Every block mesh carries its grid cell in `userData.cell` so the game can
+// raycast against the build to stack/remove blocks; the platform carries
+// `userData.ground` so clicks on bare ground place at level 0.
 // All materials come from the module-level texture cache, so only geometries are
 // owned by the group — free them with disposeGeometriesOnly().
 export function buildPlotGroup(
@@ -20,6 +23,8 @@ export function buildPlotGroup(
     getPlatformMaterial(THREE, platformColor)
   );
   plat.position.set(0, -0.5, 0);
+  plat.receiveShadow = true;
+  plat.userData.ground = true;
   group.add(plat);
 
   for (const p of layout) {
@@ -27,6 +32,8 @@ export function buildPlotGroup(
     if (!item) continue;
     const px = p.x - half + 0.5;
     const pz = p.z - half + 0.5;
+    const py = p.y ?? 0; // stack level; base of the cell sits at world y = py
+    const cell = { x: p.x, y: py, z: p.z };
 
     if (item.id === "tree") {
       const trunkMat = getBlockMaterial(
@@ -38,7 +45,9 @@ export function buildPlotGroup(
         STORE_MAP["leaves"] ?? item
       ) as THREEType.Material;
       const trunk = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.4, 0.4), trunkMat);
-      trunk.position.set(px, 1.2, pz);
+      trunk.position.set(px, py + 1.2, pz);
+      trunk.castShadow = true;
+      trunk.userData.cell = cell;
       group.add(trunk);
       const canopy: [number, number, number, number][] = [
         [0, 2.7, 0, 1.7],
@@ -50,7 +59,9 @@ export function buildPlotGroup(
       ];
       for (const [dx, dy, dz, s] of canopy) {
         const leaf = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), leafMat);
-        leaf.position.set(px + dx, dy, pz + dz);
+        leaf.position.set(px + dx, py + dy, pz + dz);
+        leaf.castShadow = true;
+        leaf.userData.cell = cell;
         group.add(leaf);
       }
       continue;
@@ -60,7 +71,10 @@ export function buildPlotGroup(
     const geo =
       item.height === 1 ? unit : new THREE.BoxGeometry(1, item.height, 1);
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(px, item.height / 2, pz);
+    mesh.position.set(px, py + item.height / 2, pz);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.userData.cell = cell;
     group.add(mesh);
   }
   return group;
